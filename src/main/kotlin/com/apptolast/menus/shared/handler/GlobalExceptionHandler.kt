@@ -4,7 +4,9 @@ import com.apptolast.menus.shared.dto.ErrorDetail
 import com.apptolast.menus.shared.dto.ErrorResponse
 import com.apptolast.menus.shared.exception.BusinessException
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -13,6 +15,23 @@ import java.time.OffsetDateTime
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
+
+    @ExceptionHandler(BadCredentialsException::class)
+    fun handleBadCredentials(
+        ex: BadCredentialsException,
+        request: HttpServletRequest
+    ): ResponseEntity<ErrorResponse> {
+        val response = ErrorResponse(
+            error = ErrorDetail(
+                code = "INVALID_CREDENTIALS",
+                message = "Invalid credentials",
+                status = 401,
+                timestamp = OffsetDateTime.now(),
+                path = request.requestURI
+            )
+        )
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response)
+    }
 
     @ExceptionHandler(BusinessException::class)
     fun handleBusinessException(

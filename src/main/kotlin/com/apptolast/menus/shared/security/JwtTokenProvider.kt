@@ -13,16 +13,22 @@ import javax.crypto.SecretKey
 class JwtTokenProvider(private val appConfig: AppConfig) {
 
     private val signingKey: SecretKey by lazy {
-        Keys.hmacShaKeyFor(appConfig.jwt.secret.toByteArray(Charsets.UTF_8))
+        val bytes = appConfig.jwt.secret.toByteArray(Charsets.UTF_8)
+        require(bytes.size >= 64) {
+            "JWT secret must be at least 64 bytes for HS512, but was ${bytes.size} bytes."
+        }
+        Keys.hmacShaKeyFor(bytes)
     }
 
-    fun generateAccessToken(userId: UUID, role: String): String {
+    fun generateAccessToken(userId: UUID, role: String, profileUuid: UUID? = null, tenantId: UUID? = null): String {
         val now = Date()
         val expiry = Date(now.time + appConfig.jwt.accessExpiration * 1000)
         return Jwts.builder()
             .subject(userId.toString())
             .claim("role", role)
             .claim("type", "access")
+            .apply { profileUuid?.let { claim("profileUuid", it.toString()) } }
+            .apply { tenantId?.let { claim("tenantId", it.toString()) } }
             .issuedAt(now)
             .expiration(expiry)
             .signWith(signingKey, Jwts.SIG.HS512)
@@ -50,6 +56,12 @@ class JwtTokenProvider(private val appConfig: AppConfig) {
 
     fun getRoleFromToken(token: String): String =
         getClaims(token)["role"] as? String ?: ""
+
+    fun getProfileUuidFromToken(token: String): UUID? =
+        (getClaims(token)["profileUuid"] as? String)?.let { UUID.fromString(it) }
+
+    fun getTenantIdFromToken(token: String): UUID? =
+        (getClaims(token)["tenantId"] as? String)?.let { UUID.fromString(it) }
 
     fun getTokenType(token: String): String =
         getClaims(token)["type"] as? String ?: ""

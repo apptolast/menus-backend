@@ -15,6 +15,7 @@ import com.apptolast.menus.shared.exception.ConflictException
 import com.apptolast.menus.shared.exception.ForbiddenException
 import com.apptolast.menus.shared.exception.ResourceNotFoundException
 import com.apptolast.menus.shared.security.JwtTokenProvider
+import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -48,14 +49,14 @@ class AuthServiceImpl(
     override fun login(request: LoginRequest): AuthResponse {
         val emailHash = encryptionConfig.hashEmail(request.email)
         val user = userAccountRepository.findByEmailHash(emailHash)
-            .orElseThrow { ResourceNotFoundException("INVALID_CREDENTIALS", "Invalid credentials") }
+            .orElseThrow { BadCredentialsException("Invalid credentials") }
         if (!user.isActive) {
             throw ForbiddenException("ACCOUNT_DISABLED", "Account is disabled")
         }
         val hash = user.passwordHash
-            ?: throw ResourceNotFoundException("INVALID_CREDENTIALS", "Invalid credentials")
+            ?: throw BadCredentialsException("Invalid credentials")
         if (!passwordEncoder.matches(request.password, hash)) {
-            throw ResourceNotFoundException("INVALID_CREDENTIALS", "Invalid credentials")
+            throw BadCredentialsException("Invalid credentials")
         }
         return buildAuthResponse(user)
     }
@@ -69,6 +70,9 @@ class AuthServiceImpl(
         val userId = jwtTokenProvider.getUserIdFromToken(refreshToken)
         val user = userAccountRepository.findById(userId)
             .orElseThrow { ResourceNotFoundException("USER_NOT_FOUND", "User not found") }
+        if (!user.isActive) {
+            throw ForbiddenException("ACCOUNT_DISABLED", "Account is disabled")
+        }
         return buildAuthResponse(user)
     }
 
@@ -116,6 +120,9 @@ class AuthServiceImpl(
                 )
                 newUser
             }
+        }
+        if (!user.isActive) {
+            throw ForbiddenException("ACCOUNT_DISABLED", "Account is disabled")
         }
         return buildAuthResponse(user)
     }
