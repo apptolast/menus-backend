@@ -5,6 +5,7 @@ import java.util.UUID
 
 data class RestaurantResponse(
     val id: UUID,
+    val tenantId: UUID,
     val name: String,
     val slug: String,
     val description: String?,

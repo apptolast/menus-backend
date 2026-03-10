@@ -40,7 +40,13 @@ class SecurityConfig(
                         "/api/v1/auth/oauth2/google/callback"
                     ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/allergens").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/restaurants", "/api/v1/restaurants/*").permitAll()
+                    .requestMatchers(
+                        HttpMethod.GET,
+                        "/api/v1/restaurants",
+                        "/api/v1/restaurants/*",
+                        "/api/v1/restaurants/*/menu",
+                        "/api/v1/restaurants/*/sections/*/dishes"
+                    ).permitAll()
                     .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                     .requestMatchers(
                         "/swagger-ui/**",

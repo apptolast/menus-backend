@@ -45,7 +45,7 @@ class AdminMenuController(
         @Valid @RequestBody request: MenuRequest
     ): ResponseEntity<MenuResponse> {
         val restaurant = restaurantService.findByOwnerId(principal.userId)
-        val menu = menuService.create(restaurant.id, restaurant.id, request)
+        val menu = menuService.create(restaurant.id, restaurant.tenantId, request)
         return ResponseEntity.status(HttpStatus.CREATED).body(menu)
     }
 
@@ -57,7 +57,7 @@ class AdminMenuController(
         @Valid @RequestBody request: MenuRequest
     ): ResponseEntity<MenuResponse> {
         val restaurant = restaurantService.findByOwnerId(principal.userId)
-        return ResponseEntity.ok(menuService.update(id, restaurant.id, request))
+        return ResponseEntity.ok(menuService.update(id, restaurant.tenantId, request))
     }
 
     @DeleteMapping("/{id}")
@@ -67,7 +67,7 @@ class AdminMenuController(
         @PathVariable id: UUID
     ): ResponseEntity<Void> {
         val restaurant = restaurantService.findByOwnerId(principal.userId)
-        menuService.archive(id, restaurant.id)
+        menuService.archive(id, restaurant.tenantId)
         return ResponseEntity.noContent().build()
     }
 
@@ -79,7 +79,7 @@ class AdminMenuController(
         @Valid @RequestBody request: SectionRequest
     ): ResponseEntity<SectionResponse> {
         val restaurant = restaurantService.findByOwnerId(principal.userId)
-        val section = menuService.addSection(menuId, restaurant.id, request)
+        val section = menuService.addSection(menuId, restaurant.tenantId, request)
         return ResponseEntity.status(HttpStatus.CREATED).body(section)
     }
 
@@ -92,7 +92,7 @@ class AdminMenuController(
         @Valid @RequestBody request: SectionRequest
     ): ResponseEntity<SectionResponse> {
         val restaurant = restaurantService.findByOwnerId(principal.userId)
-        return ResponseEntity.ok(menuService.updateSection(sectionId, restaurant.id, request))
+        return ResponseEntity.ok(menuService.updateSection(sectionId, restaurant.tenantId, request))
     }
 
     @DeleteMapping("/{menuId}/sections/{sectionId}")
@@ -103,7 +103,7 @@ class AdminMenuController(
         @PathVariable sectionId: UUID
     ): ResponseEntity<Void> {
         val restaurant = restaurantService.findByOwnerId(principal.userId)
-        menuService.deleteSection(sectionId, restaurant.id)
+        menuService.deleteSection(sectionId, restaurant.tenantId)
         return ResponseEntity.noContent().build()
     }
 }

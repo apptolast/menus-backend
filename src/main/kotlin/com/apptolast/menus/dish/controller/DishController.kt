@@ -4,6 +4,8 @@ import com.apptolast.menus.auth.service.ConsentService
 import com.apptolast.menus.consumer.service.UserAllergenProfileService
 import com.apptolast.menus.dish.dto.response.DishResponse
 import com.apptolast.menus.dish.service.DishService
+import com.apptolast.menus.menu.repository.MenuSectionRepository
+import com.apptolast.menus.shared.exception.ResourceNotFoundException
 import com.apptolast.menus.shared.security.UserPrincipal
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -18,7 +20,8 @@ import java.util.UUID
 class DishController(
     private val dishService: DishService,
     private val userAllergenProfileService: UserAllergenProfileService,
-    private val consentService: ConsentService
+    private val consentService: ConsentService,
+    private val menuSectionRepository: MenuSectionRepository
 ) {
 
     @GetMapping
@@ -28,6 +31,9 @@ class DishController(
         @PathVariable sectionId: UUID,
         @AuthenticationPrincipal principal: UserPrincipal?
     ): ResponseEntity<List<DishResponse>> {
+        if (!menuSectionRepository.existsByIdAndMenuRestaurantId(sectionId, restaurantId)) {
+            throw ResourceNotFoundException("SECTION_NOT_FOUND", "Section not found for this restaurant")
+        }
         val userAllergenCodes = principal
             ?.takeIf { consentService.hasActiveConsent(it.profileUuid) }
             ?.let { p ->

@@ -69,6 +69,9 @@ class AuthServiceImpl(
         val userId = jwtTokenProvider.getUserIdFromToken(refreshToken)
         val user = userAccountRepository.findById(userId)
             .orElseThrow { ResourceNotFoundException("USER_NOT_FOUND", "User not found") }
+        if (!user.isActive) {
+            throw ForbiddenException("ACCOUNT_DISABLED", "Account is disabled")
+        }
         return buildAuthResponse(user)
     }
 
@@ -116,6 +119,9 @@ class AuthServiceImpl(
                 )
                 newUser
             }
+        }
+        if (!user.isActive) {
+            throw ForbiddenException("ACCOUNT_DISABLED", "Account is disabled")
         }
         return buildAuthResponse(user)
     }

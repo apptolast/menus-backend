@@ -6,4 +6,5 @@ import java.util.UUID
 
 interface MenuSectionRepository : JpaRepository<MenuSection, UUID> {
     fun findByMenuIdOrderByDisplayOrderAsc(menuId: UUID): List<MenuSection>
+    fun existsByIdAndMenuRestaurantId(id: UUID, restaurantId: UUID): Boolean
 }

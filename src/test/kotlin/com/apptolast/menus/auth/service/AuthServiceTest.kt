@@ -21,6 +21,7 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import java.util.Optional
 import java.util.UUID
@@ -50,8 +51,6 @@ class AuthServiceTest {
         )
     }
 
-    private fun anyUuid(): UUID = org.mockito.ArgumentMatchers.any(UUID::class.java) ?: UUID.randomUUID()
-
     @Test
     @DisplayName("register: creates user and returns tokens when email is new")
     fun registerSuccess() {
@@ -63,9 +62,9 @@ class AuthServiceTest {
         `when`(encryptionConfig.hashEmail(email)).thenReturn(hash)
         `when`(encryptionConfig.encryptEmail(email)).thenReturn(encrypted)
         `when`(userAccountRepository.existsByEmailHash(hash)).thenReturn(false)
-        `when`(userAccountRepository.save(org.mockito.ArgumentMatchers.any(UserAccount::class.java) ?: UserAccount())).thenReturn(savedUser)
-        `when`(jwtTokenProvider.generateAccessToken(anyUuid(), anyString())).thenReturn("access-token")
-        `when`(jwtTokenProvider.generateRefreshToken(anyUuid())).thenReturn("refresh-token")
+        `when`(userAccountRepository.save(any())).thenReturn(savedUser)
+        `when`(jwtTokenProvider.generateAccessToken(any(), anyString())).thenReturn("access-token")
+        `when`(jwtTokenProvider.generateRefreshToken(any())).thenReturn("refresh-token")
 
         val response = authService.register(RegisterRequest(email, "Password1!"))
 
@@ -102,8 +101,8 @@ class AuthServiceTest {
 
         `when`(encryptionConfig.hashEmail(email)).thenReturn(emailHash)
         `when`(userAccountRepository.findByEmailHash(emailHash)).thenReturn(Optional.of(user))
-        `when`(jwtTokenProvider.generateAccessToken(anyUuid(), anyString())).thenReturn("access-token")
-        `when`(jwtTokenProvider.generateRefreshToken(anyUuid())).thenReturn("refresh-token")
+        `when`(jwtTokenProvider.generateAccessToken(any(), anyString())).thenReturn("access-token")
+        `when`(jwtTokenProvider.generateRefreshToken(any())).thenReturn("refresh-token")
 
         val response = authService.login(LoginRequest(email, password))
         assertThat(response.accessToken).isEqualTo("access-token")
