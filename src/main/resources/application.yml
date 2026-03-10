@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: menus-backend
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/menusdb}
+    username: ${DATABASE_USERNAME:menus}
+    password: ${DATABASE_PASSWORD:menus}
+    hikari:
+      maximum-pool-size: 10
+      connection-timeout: 30000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
+        jdbc:
+          batch_size: 20
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:placeholder}
+            client-secret: ${GOOGLE_CLIENT_SECRET:placeholder}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-key-minimum-64-bytes-long-change-in-production-please}
+    access-expiration: 900
+    refresh-expiration: 604800
+  encryption:
+    key: ${ENCRYPTION_KEY:dev-encryption-key-32bytes!}
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+
+server:
+  port: ${PORT:8080}
+  compression:
+    enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

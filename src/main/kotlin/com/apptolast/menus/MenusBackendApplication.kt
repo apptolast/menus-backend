@@ -1,11 +1,11 @@
-package com.example.menubackend
+package com.apptolast.menus
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-class MenuBackendApplication
+class MenusBackendApplication
 
 fun main(args: Array<String>) {
-    runApplication<MenuBackendApplication>(*args)
+    runApplication<MenusBackendApplication>(*args)
 }
