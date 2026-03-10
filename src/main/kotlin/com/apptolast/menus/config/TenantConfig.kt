@@ -41,9 +41,17 @@ class TenantFilter(
             if (principal != null) {
                 restaurantRepository.findByOwnerId(principal.userId)
                     .ifPresent { restaurant ->
-                        val tenantId = restaurant.tenantId.toString()
-                        TenantContext.setTenant(tenantId)
-                        jdbcTemplate.execute("SET LOCAL app.current_tenant = '$tenantId'")
+                        val tenantId = restaurant.tenantId
+                        val tenantIdStr = tenantId.toString()
+                        TenantContext.setTenant(tenantIdStr)
+                        // Use ConnectionCallback to avoid string interpolation in SQL;
+                        // SET LOCAL requires a session-level statement and is safe with a validated UUID.
+                        jdbcTemplate.execute { conn: java.sql.Connection ->
+                            conn.prepareStatement("SET LOCAL app.current_tenant = ?").use { stmt ->
+                                stmt.setString(1, tenantIdStr)
+                                stmt.execute()
+                            }
+                        }
                     }
             }
             filterChain.doFilter(request, response)

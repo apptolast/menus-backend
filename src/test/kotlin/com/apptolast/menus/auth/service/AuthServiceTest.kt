@@ -51,7 +51,7 @@ class AuthServiceTest {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <T> anyNonNull(clazz: Class<T>): T =
+    private fun <T> anyMatcher(clazz: Class<T>): T =
         org.mockito.ArgumentMatchers.any(clazz) ?: (null as T)
 
     @Test
@@ -65,9 +65,9 @@ class AuthServiceTest {
         `when`(encryptionConfig.hashEmail(email)).thenReturn(hash)
         `when`(encryptionConfig.encryptEmail(email)).thenReturn(encrypted)
         `when`(userAccountRepository.existsByEmailHash(hash)).thenReturn(false)
-        `when`(userAccountRepository.save(anyNonNull(UserAccount::class.java))).thenReturn(savedUser)
-        `when`(jwtTokenProvider.generateAccessToken(anyNonNull(UUID::class.java), anyString())).thenReturn("access-token")
-        `when`(jwtTokenProvider.generateRefreshToken(anyNonNull(UUID::class.java))).thenReturn("refresh-token")
+        `when`(userAccountRepository.save(anyMatcher(UserAccount::class.java))).thenReturn(savedUser)
+        `when`(jwtTokenProvider.generateAccessToken(anyMatcher(UUID::class.java), anyString())).thenReturn("access-token")
+        `when`(jwtTokenProvider.generateRefreshToken(anyMatcher(UUID::class.java))).thenReturn("refresh-token")
 
         val response = authService.register(RegisterRequest(email, "Password1!"))
 
@@ -104,8 +104,8 @@ class AuthServiceTest {
 
         `when`(encryptionConfig.hashEmail(email)).thenReturn(emailHash)
         `when`(userAccountRepository.findByEmailHash(emailHash)).thenReturn(Optional.of(user))
-        `when`(jwtTokenProvider.generateAccessToken(anyNonNull(UUID::class.java), anyString())).thenReturn("access-token")
-        `when`(jwtTokenProvider.generateRefreshToken(anyNonNull(UUID::class.java))).thenReturn("refresh-token")
+        `when`(jwtTokenProvider.generateAccessToken(anyMatcher(UUID::class.java), anyString())).thenReturn("access-token")
+        `when`(jwtTokenProvider.generateRefreshToken(anyMatcher(UUID::class.java))).thenReturn("refresh-token")
 
         val response = authService.login(LoginRequest(email, password))
         assertThat(response.accessToken).isEqualTo("access-token")
