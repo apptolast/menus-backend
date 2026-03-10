@@ -12,7 +12,7 @@
 
 ## 1. Configurar Secrets
 
-**Nunca** commites valores reales. Edita `k8s/secret.yaml` con valores base64 reales:
+**Nunca** hagas commit de valores reales. Genera los valores en base64 para cada secreto:
 
 ```bash
 # Generar base64 para cada valor
@@ -25,7 +25,7 @@ echo -n "tu-google-client-id.apps.googleusercontent.com" | base64
 echo -n "tu-google-client-secret" | base64
 ```
 
-O usa External Secrets Operator (recomendado para producción):
+Crea el Secret en tu cluster con `kubectl` (o aplica tu manifiesto de Secret en la carpeta de manifiestos K8s de tu proyecto):
 
 ```bash
 kubectl create secret generic menus-backend-secret \
@@ -38,6 +38,8 @@ kubectl create secret generic menus-backend-secret \
   --from-literal=GOOGLE_CLIENT_SECRET="<client-secret>" \
   -n menus-backend
 ```
+
+> Para producción se recomienda usar [External Secrets Operator](https://external-secrets.io/) con un backend de secrets (p.ej. AWS Secrets Manager, Vault) en lugar de gestionar Secrets nativos manualmente.
 
 ---
 
@@ -55,28 +57,30 @@ kubectl create secret docker-registry ghcr-secret \
 
 ## 3. Aplicar Manifiestos K8s (en orden)
 
+> Los manifiestos K8s no están incluidos en este repositorio. Crea y organiza tus propios manifiestos (p.ej. en una carpeta de manifiestos dedicada o en un repositorio de infraestructura separado) siguiendo el orden recomendado:
+
 ```bash
 # 1. Namespace
-kubectl apply -f k8s/namespace.yaml
+kubectl apply -f namespace.yaml
 
 # 2. Storage
-kubectl apply -f k8s/pvc.yaml
+kubectl apply -f pvc.yaml
 
 # 3. Configuración
-kubectl apply -f k8s/configmap.yaml
-kubectl apply -f k8s/secret.yaml
+kubectl apply -f configmap.yaml
+kubectl apply -f secret.yaml   # o gestiona los secrets con External Secrets Operator
 
 # 4. Base de datos
-kubectl apply -f k8s/postgres.yaml
+kubectl apply -f postgres.yaml
 kubectl wait --for=condition=ready pod -l app=postgres -n menus-backend --timeout=120s
 
 # 5. Aplicación
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
 
 # 6. Ingress y middleware (elegir dev o prod)
-kubectl apply -f k8s/middleware.yaml
-kubectl apply -f k8s/ingress-dev.yaml   # o ingress-prod.yaml
+kubectl apply -f middleware.yaml
+kubectl apply -f ingress-dev.yaml   # o ingress-prod.yaml
 
 # 7. Verificar
 kubectl get pods -n menus-backend
@@ -102,12 +106,17 @@ open https://menus-api-dev.apptolast.com/swagger-ui/index.html
 
 ## 5. CI/CD con GitHub Actions
 
-### Flujo automático:
+> **Nota:** Este repositorio no incluye actualmente workflows de GitHub Actions bajo `.github/workflows`.
+> Para habilitar el flujo descrito a continuación, crea y versiona tus propios workflows
+> (por ejemplo, `.github/workflows/ci.yml` y `.github/workflows/cd-dev.yml`) o reutiliza
+> workflows compartidos de tu organización, configurándolos con las variables indicadas.
+
+### Flujo automático (esperado):
 1. Push a `feature/**` o `develop` → ejecuta **CI** (build + tests + quality gates)
 2. Push a `main` → ejecuta **CD** (build Docker image → push a ghcr.io → deploy a dev)
 
 ### Variables requeridas en GitHub Actions:
-- `KUBE_CONFIG_DEV`: kubeconfig del cluster de desarrollo (secret)
+- `KUBE_CONFIG_DEV`: kubeconfig del cluster de desarrollo (configurada como Secret de repositorio/entorno)
 
 ---
 

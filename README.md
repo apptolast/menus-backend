@@ -2,8 +2,6 @@
 
 API REST para la gestión de alérgenos en restaurantes — **AppToLast**
 
-[![CI](https://github.com/apptolast/menus-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/apptolast/menus-backend/actions/workflows/ci.yml)
-
 ---
 
 ## Descripción
@@ -18,7 +16,7 @@ Backend del sistema de declaración obligatoria de **14 alérgenos EU** (Reglame
 
 | Componente | Versión |
 |---|---|
-| Kotlin | 2.2 (JVM 21 Temurin) |
+| Kotlin | 2.2.21 (JVM 21 Temurin) |
 | Spring Boot | 4.0.3 |
 | PostgreSQL | 16 (pgcrypto, RLS) |
 | Flyway | 11.x (migraciones V1–V9) |
@@ -76,6 +74,8 @@ docker compose up -d
 
 ## Estructura del Proyecto
 
+> **Nota:** Los módulos siguientes corresponden a la arquitectura objetivo del proyecto. Actualmente solo `MenusBackendApplication.kt` está implementado; el resto de módulos se están desarrollando de forma incremental por waves.
+
 ```
 src/main/kotlin/com/apptolast/menus/
 ├── MenusBackendApplication.kt
@@ -95,6 +95,8 @@ src/main/kotlin/com/apptolast/menus/
 
 ## API Endpoints Principales
 
+> **Nota:** Los endpoints listados corresponden al contrato de API definido en [`docs/api-contracts.md`](docs/api-contracts.md). Los controllers aún están en desarrollo; cuando estén implementados, la documentación completa estará disponible en Swagger UI.
+
 | Método | Endpoint | Auth | Descripción |
 |---|---|---|---|
 | POST | `/api/v1/auth/register` | Pública | Registro email+password |
@@ -108,7 +110,7 @@ src/main/kotlin/com/apptolast/menus/
 | GET | `/api/v1/users/me/allergen-profile` | JWT+Consent | Perfil alérgenos |
 | DELETE | `/api/v1/users/me/data-delete` | JWT | Borrar cuenta (RGPD) |
 
-Documentación completa: [Swagger UI](http://localhost:8080/swagger-ui/index.html) o [api-contracts.md](docs/api-contracts.md)
+Documentación completa: [api-contracts.md](docs/api-contracts.md)
 
 ---
 
@@ -146,9 +148,13 @@ Ver [`.env.example`](.env.example) para la lista completa. Variables requeridas 
 | Variable | Descripción |
 |---|---|
 | `DATABASE_URL` | JDBC URL de PostgreSQL |
+| `DATABASE_USERNAME` | Usuario de la base de datos PostgreSQL |
+| `DATABASE_PASSWORD` | Password del usuario de la base de datos |
 | `JWT_SECRET` | Mínimo 64 bytes para HS512 |
 | `ENCRYPTION_KEY` | 32 bytes para AES-256 |
 | `GOOGLE_CLIENT_ID` | OAuth2 client ID |
+| `GOOGLE_CLIENT_SECRET` | OAuth2 client secret |
+| `CORS_ORIGINS` | Lista de orígenes permitidos (separados por comas) |
 
 ---
 

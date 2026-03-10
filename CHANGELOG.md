@@ -7,14 +7,14 @@ Versionado siguiendo [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
-## [Unreleased]
+## [Unreleased] — 0.0.1-SNAPSHOT
 
 ### Added
 - Implementación completa del backend API REST de alérgenos
 
 ---
 
-## [1.0.0] — 2026-03-10
+## [1.0.0] — Planificado
 
 ### Added
 
@@ -66,9 +66,9 @@ Versionado siguiendo [Semantic Versioning](https://semver.org/lang/es/).
 - GitHub Actions CD: Docker build + push a ghcr.io/apptolast/menus-backend
 
 #### Tests
-- 15 tests unitarios: semáforo (11 casos), auth (4 casos) — todos PASS
-- Tests de integración con Testcontainers PostgreSQL (requieren Docker)
-- Tests de seguridad: acceso público, control de roles, consent RGPD
+- Batería de tests unitarios planificada: semáforo (casuística principal) y auth
+- Tests de integración con Testcontainers PostgreSQL previstos (requieren Docker)
+- Tests de seguridad planificados: acceso público, control de roles, consent RGPD
 
 ### Technical Decisions
 - ADR-01: Monolito modular (no microservicios)
