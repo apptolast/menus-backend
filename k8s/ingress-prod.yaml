@@ -15,5 +15,8 @@ spec:
       services:
         - name: menus-backend
           port: 80
+      middlewares:
+        - name: menus-ratelimit
+        - name: menus-security-headers
   tls:
     certResolver: letsencrypt

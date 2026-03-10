@@ -3,8 +3,6 @@ kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
   namespace: menus-backend
-  annotations:
-    volume.beta.kubernetes.io/storage-class: "longhorn"
 spec:
   accessModes:
     - ReadWriteOnce
