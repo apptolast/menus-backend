@@ -1,9 +1,10 @@
 package com.apptolast.menus.shared.security
 
-import com.apptolast.menus.consumer.repository.UserAccountRepository
+import com.apptolast.menus.consumer.model.enum.UserRole
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
@@ -12,9 +13,10 @@ import org.springframework.web.filter.OncePerRequestFilter
 
 @Component
 class JwtAuthenticationFilter(
-    private val jwtTokenProvider: JwtTokenProvider,
-    private val userAccountRepository: UserAccountRepository
+    private val jwtTokenProvider: JwtTokenProvider
 ) : OncePerRequestFilter() {
+
+    private val log = LoggerFactory.getLogger(JwtAuthenticationFilter::class.java)
 
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -26,20 +28,26 @@ class JwtAuthenticationFilter(
             jwtTokenProvider.getTokenType(token) == "access"
         ) {
             val userId = jwtTokenProvider.getUserIdFromToken(token)
-            userAccountRepository.findById(userId).ifPresent { user ->
-                if (user.isActive) {
-                    val principal = UserPrincipal(
-                        userId = user.id,
-                        profileUuid = user.profileUuid,
-                        role = user.role,
-                        _username = userId.toString()
-                    )
-                    val authentication = UsernamePasswordAuthenticationToken(
-                        principal, null, principal.authorities
-                    )
-                    authentication.details = WebAuthenticationDetailsSource().buildDetails(request)
-                    SecurityContextHolder.getContext().authentication = authentication
-                }
+            val profileUuid = jwtTokenProvider.getProfileUuidFromToken(token)
+            val roleStr = jwtTokenProvider.getRoleFromToken(token)
+            val tenantId = jwtTokenProvider.getTenantIdFromToken(token)
+
+            val role = runCatching { UserRole.valueOf(roleStr) }.getOrNull()
+            if (profileUuid == null || role == null) {
+                log.warn("Valid JWT signature but missing or invalid claims: profileUuid={}, role='{}'", profileUuid, roleStr)
+            } else {
+                val principal = UserPrincipal(
+                    userId = userId,
+                    profileUuid = profileUuid,
+                    role = role,
+                    tenantId = tenantId,
+                    _username = userId.toString()
+                )
+                val authentication = UsernamePasswordAuthenticationToken(
+                    principal, null, principal.authorities
+                )
+                authentication.details = WebAuthenticationDetailsSource().buildDetails(request)
+                SecurityContextHolder.getContext().authentication = authentication
             }
         }
         filterChain.doFilter(request, response)

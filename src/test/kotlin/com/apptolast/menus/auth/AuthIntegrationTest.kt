@@ -5,14 +5,12 @@ import com.apptolast.menus.auth.dto.request.LoginRequest
 import com.apptolast.menus.auth.dto.request.RegisterRequest
 import com.apptolast.menus.auth.dto.response.AuthResponse
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.client.RestClient
 
-@Disabled("Requires Docker for Testcontainers PostgreSQL — run with Docker Desktop active")
 @DisplayName("Auth API — Integration Tests")
 class AuthIntegrationTest : AbstractIntegrationTest() {
 

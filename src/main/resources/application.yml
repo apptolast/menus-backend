@@ -39,6 +39,8 @@ app:
     key: ${ENCRYPTION_KEY:dev-encryption-key-32bytes!}
   cors:
     allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:placeholder}
 
 management:
   endpoints:

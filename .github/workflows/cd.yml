@@ -88,5 +88,5 @@ jobs:
       - name: Deploy to K8s (Dev)
         run: |
           echo "Deploy to dev — configure kubectl with KUBE_CONFIG_DEV secret"
-          echo "kubectl set image deployment/menus-backend menus-backend=ghcr.io/apptolast/menus-backend:main-${{ github.sha }} -n menus-backend"
+          echo "kubectl set image deployment/menus-backend menus-backend=ghcr.io/apptolast/menus-backend:main-${{ github.sha }} -n apptolast-menus-dev"
           echo "Note: Set KUBE_CONFIG_DEV secret in GitHub repository settings"

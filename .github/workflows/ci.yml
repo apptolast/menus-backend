@@ -50,12 +50,12 @@ jobs:
       - name: Run tests
         run: ./gradlew test --no-daemon
         env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/menusdb_test
-          SPRING_DATASOURCE_USERNAME: menus_test
-          SPRING_DATASOURCE_PASSWORD: menus_test
-          APP_JWT_SECRET: ci-test-secret-key-minimum-64-bytes-long-for-hs512-algorithm
-          APP_ENCRYPTION_KEY: ci-test-encryption-32bytes!!!
-          APP_CORS_ALLOWED_ORIGINS: http://localhost:3000
+          DATABASE_URL: jdbc:postgresql://localhost:5432/menusdb_test
+          DATABASE_USERNAME: menus_test
+          DATABASE_PASSWORD: menus_test
+          JWT_SECRET: ci-test-secret-key-minimum-64-bytes-long-for-hs512-algorithm
+          ENCRYPTION_KEY: ci-test-encryption-32bytes!!!
+          CORS_ORIGINS: http://localhost:3000
 
       - name: Upload test results
         if: always()

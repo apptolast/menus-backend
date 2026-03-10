@@ -2,12 +2,10 @@ package com.apptolast.menus.allergen
 
 import com.apptolast.menus.AbstractIntegrationTest
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 
-@Disabled("Requires Docker for Testcontainers PostgreSQL — run with Docker Desktop active")
 @DisplayName("Allergen API — Integration Tests")
 class AllergenIntegrationTest : AbstractIntegrationTest() {
 

@@ -3,7 +3,7 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: menus-backend-prod
-  namespace: menus-backend
+  namespace: apptolast-menus-prod
   annotations:
     kubernetes.io/description: "Menus Backend API — Production"
 spec:

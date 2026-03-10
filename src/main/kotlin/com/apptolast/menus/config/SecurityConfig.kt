@@ -21,6 +21,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableMethodSecurity(prePostEnabled = true)
 class SecurityConfig(
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
+    private val tenantFilter: TenantFilter,
     private val appConfig: AppConfig
 ) {
 
@@ -40,7 +41,13 @@ class SecurityConfig(
                         "/api/v1/auth/oauth2/google/callback"
                     ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/allergens").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/restaurants", "/api/v1/restaurants/*").permitAll()
+                    .requestMatchers(
+                        HttpMethod.GET,
+                        "/api/v1/restaurants",
+                        "/api/v1/restaurants/*",
+                        "/api/v1/restaurants/*/menu",
+                        "/api/v1/restaurants/*/sections/*/dishes"
+                    ).permitAll()
                     .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                     .requestMatchers(
                         "/swagger-ui/**",
@@ -51,6 +58,7 @@ class SecurityConfig(
                     .anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterAfter(tenantFilter, JwtAuthenticationFilter::class.java)
         return http.build()
     }
 

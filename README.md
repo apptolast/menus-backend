@@ -76,6 +76,10 @@ docker compose up -d
 
 ## Estructura del Proyecto
 
+> **Nota:** La estructura que se muestra a continuacion representa el diseno objetivo completo
+> del proyecto. Algunos modulos pueden estar parcialmente implementados o pendientes de
+> desarrollo en la rama actual. Consulta el CHANGELOG.md para ver el estado real.
+
 ```
 src/main/kotlin/com/apptolast/menus/
 ├── MenusBackendApplication.kt
@@ -95,17 +99,21 @@ src/main/kotlin/com/apptolast/menus/
 
 ## API Endpoints Principales
 
-| Método | Endpoint | Auth | Descripción |
+> **Nota:** La tabla siguiente muestra los endpoints del diseno completo de la API.
+> Algunos endpoints pueden no estar implementados todavia. Consulta Swagger UI para
+> ver los endpoints disponibles en la version actual.
+
+| Metodo | Endpoint | Auth | Descripcion |
 |---|---|---|---|
-| POST | `/api/v1/auth/register` | Pública | Registro email+password |
-| POST | `/api/v1/auth/login` | Pública | Login, devuelve JWT |
-| POST | `/api/v1/auth/oauth2/google/callback` | Pública | Login Google |
-| GET | `/api/v1/allergens` | Pública | 14 alérgenos EU |
-| GET | `/api/v1/restaurants` | Pública | Buscar restaurantes |
-| GET | `/api/v1/restaurants/{id}/menu` | Opt. JWT | Menú con semáforo |
-| GET | `/api/v1/admin/restaurant` | JWT (Owner) | Gestión restaurante |
+| POST | `/api/v1/auth/register` | Publica | Registro email+password |
+| POST | `/api/v1/auth/login` | Publica | Login, devuelve JWT |
+| POST | `/api/v1/auth/oauth2/google/callback` | Publica | Login Google |
+| GET | `/api/v1/allergens` | Publica | 14 alergenos EU |
+| GET | `/api/v1/restaurants` | Publica | Buscar restaurantes |
+| GET | `/api/v1/restaurants/{id}/menu` | Opt. JWT | Menu con semaforo |
+| GET | `/api/v1/admin/restaurant` | JWT (Owner) | Gestion restaurante |
 | POST | `/api/v1/admin/dishes` | JWT (Owner) | Crear plato |
-| GET | `/api/v1/users/me/allergen-profile` | JWT+Consent | Perfil alérgenos |
+| GET | `/api/v1/users/me/allergen-profile` | JWT+Consent | Perfil alergenos |
 | DELETE | `/api/v1/users/me/data-delete` | JWT | Borrar cuenta (RGPD) |
 
 Documentación completa: [Swagger UI](http://localhost:8080/swagger-ui/index.html) o [api-contracts.md](docs/api-contracts.md)
