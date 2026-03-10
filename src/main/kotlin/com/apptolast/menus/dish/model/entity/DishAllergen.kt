@@ -24,7 +24,7 @@ class DishAllergen(
     val allergen: Allergen = Allergen(),
 
     @Column(name = "tenant_id", nullable = false)
-    val tenantId: UUID = UUID.randomUUID(),
+    val tenantId: UUID? = null,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "containment_level", nullable = false, length = 20)

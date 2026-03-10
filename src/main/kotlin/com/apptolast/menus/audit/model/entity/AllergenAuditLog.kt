@@ -23,15 +23,32 @@ class AllergenAuditLog(
     @Column(name = "changed_by_uuid", nullable = false)
     val changedByUuid: UUID = UUID.randomUUID(),
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "action", nullable = false, length = 20)
-    val action: String = "",
+    val action: AuditAction = AuditAction.ADD,
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "old_level", length = 20)
-    val oldLevel: String? = null,
+    val oldLevel: ContainmentLevel? = null,
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "new_level", length = 20)
-    val newLevel: String? = null,
+    val newLevel: ContainmentLevel? = null,
 
     @Column(name = "changed_at", nullable = false, updatable = false)
     val changedAt: OffsetDateTime = OffsetDateTime.now()
 )
+
+enum class AuditAction {
+    ADD,
+    REMOVE,
+    UPDATE
+}
+
+enum class ContainmentLevel {
+    // Adjust these values to exactly match the DB's allowed containment levels.
+    NONE,
+    LOW,
+    MEDIUM,
+    HIGH
+}
