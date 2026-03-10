@@ -45,7 +45,7 @@ class AdminMenuController(
         @Valid @RequestBody request: MenuRequest
     ): ResponseEntity<MenuResponse> {
         val restaurant = restaurantService.findByOwnerId(principal.userId)
-        val menu = menuService.create(restaurant.id, restaurant.id, request)
+        val menu = menuService.create(restaurant.id, restaurant.tenantId, request)
         return ResponseEntity.status(HttpStatus.CREATED).body(menu)
     }
 

@@ -34,6 +34,6 @@ class DishController(
                 runCatching { userAllergenProfileService.getProfile(p.profileUuid).allergenCodes }
                     .getOrElse { emptyList() }
             }
-        return ResponseEntity.ok(dishService.findBySectionWithFilter(sectionId, userAllergenCodes))
+        return ResponseEntity.ok(dishService.findBySectionWithFilter(sectionId, restaurantId, userAllergenCodes))
     }
 }

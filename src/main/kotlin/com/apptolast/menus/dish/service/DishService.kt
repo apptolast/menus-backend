@@ -6,7 +6,7 @@ import com.apptolast.menus.dish.dto.response.DishResponse
 import java.util.UUID
 
 interface DishService {
-    fun findBySectionWithFilter(sectionId: UUID, userAllergenCodes: List<String>?): List<DishResponse>
+    fun findBySectionWithFilter(sectionId: UUID, restaurantId: UUID, userAllergenCodes: List<String>?): List<DishResponse>
     fun findByRestaurant(restaurantId: UUID): List<DishResponse>
     fun create(tenantId: UUID, request: DishRequest): DishResponse
     fun update(id: UUID, tenantId: UUID, request: DishRequest): DishResponse

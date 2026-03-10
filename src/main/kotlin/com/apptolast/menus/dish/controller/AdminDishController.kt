@@ -44,7 +44,7 @@ class AdminDishController(
     ): ResponseEntity<DishResponse> {
         val restaurant = restaurantService.findByOwnerId(principal.userId)
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(dishService.create(restaurant.id, request))
+            .body(dishService.create(restaurant.tenantId, request))
     }
 
     @PutMapping("/{id}")
@@ -55,7 +55,7 @@ class AdminDishController(
         @Valid @RequestBody request: DishRequest
     ): ResponseEntity<DishResponse> {
         val restaurant = restaurantService.findByOwnerId(principal.userId)
-        return ResponseEntity.ok(dishService.update(id, restaurant.id, request))
+        return ResponseEntity.ok(dishService.update(id, restaurant.tenantId, request))
     }
 
     @DeleteMapping("/{id}")
@@ -65,7 +65,7 @@ class AdminDishController(
         @PathVariable id: UUID
     ): ResponseEntity<Void> {
         val restaurant = restaurantService.findByOwnerId(principal.userId)
-        dishService.delete(id, restaurant.id)
+        dishService.delete(id, restaurant.tenantId)
         return ResponseEntity.noContent().build()
     }
 
@@ -78,7 +78,7 @@ class AdminDishController(
     ): ResponseEntity<DishResponse> {
         val restaurant = restaurantService.findByOwnerId(principal.userId)
         return ResponseEntity.ok(
-            dishService.addAllergen(id, restaurant.id, principal.profileUuid, request)
+            dishService.addAllergen(id, restaurant.tenantId, principal.profileUuid, request)
         )
     }
 
@@ -90,7 +90,7 @@ class AdminDishController(
         @PathVariable allergenId: Int
     ): ResponseEntity<Void> {
         val restaurant = restaurantService.findByOwnerId(principal.userId)
-        dishService.removeAllergen(id, allergenId, restaurant.id, principal.profileUuid)
+        dishService.removeAllergen(id, allergenId, restaurant.tenantId, principal.profileUuid)
         return ResponseEntity.noContent().build()
     }
 }

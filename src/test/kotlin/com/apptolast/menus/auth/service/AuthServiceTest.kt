@@ -50,7 +50,9 @@ class AuthServiceTest {
         )
     }
 
-    private fun anyUuid(): UUID = org.mockito.ArgumentMatchers.any(UUID::class.java) ?: UUID.randomUUID()
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> anyNonNull(clazz: Class<T>): T =
+        org.mockito.ArgumentMatchers.any(clazz) ?: (null as T)
 
     @Test
     @DisplayName("register: creates user and returns tokens when email is new")
@@ -63,9 +65,9 @@ class AuthServiceTest {
         `when`(encryptionConfig.hashEmail(email)).thenReturn(hash)
         `when`(encryptionConfig.encryptEmail(email)).thenReturn(encrypted)
         `when`(userAccountRepository.existsByEmailHash(hash)).thenReturn(false)
-        `when`(userAccountRepository.save(org.mockito.ArgumentMatchers.any(UserAccount::class.java) ?: UserAccount())).thenReturn(savedUser)
-        `when`(jwtTokenProvider.generateAccessToken(anyUuid(), anyString())).thenReturn("access-token")
-        `when`(jwtTokenProvider.generateRefreshToken(anyUuid())).thenReturn("refresh-token")
+        `when`(userAccountRepository.save(anyNonNull(UserAccount::class.java))).thenReturn(savedUser)
+        `when`(jwtTokenProvider.generateAccessToken(anyNonNull(UUID::class.java), anyString())).thenReturn("access-token")
+        `when`(jwtTokenProvider.generateRefreshToken(anyNonNull(UUID::class.java))).thenReturn("refresh-token")
 
         val response = authService.register(RegisterRequest(email, "Password1!"))
 
@@ -102,8 +104,8 @@ class AuthServiceTest {
 
         `when`(encryptionConfig.hashEmail(email)).thenReturn(emailHash)
         `when`(userAccountRepository.findByEmailHash(emailHash)).thenReturn(Optional.of(user))
-        `when`(jwtTokenProvider.generateAccessToken(anyUuid(), anyString())).thenReturn("access-token")
-        `when`(jwtTokenProvider.generateRefreshToken(anyUuid())).thenReturn("refresh-token")
+        `when`(jwtTokenProvider.generateAccessToken(anyNonNull(UUID::class.java), anyString())).thenReturn("access-token")
+        `when`(jwtTokenProvider.generateRefreshToken(anyNonNull(UUID::class.java))).thenReturn("refresh-token")
 
         val response = authService.login(LoginRequest(email, password))
         assertThat(response.accessToken).isEqualTo("access-token")

@@ -4,6 +4,7 @@ import com.apptolast.menus.shared.dto.ErrorDetail
 import com.apptolast.menus.shared.dto.ErrorResponse
 import com.apptolast.menus.shared.exception.BusinessException
 import jakarta.servlet.http.HttpServletRequest
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -13,6 +14,8 @@ import java.time.OffsetDateTime
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
+
+    private val logger = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
     @ExceptionHandler(BusinessException::class)
     fun handleBusinessException(
@@ -56,6 +59,7 @@ class GlobalExceptionHandler {
         ex: Exception,
         request: HttpServletRequest
     ): ResponseEntity<ErrorResponse> {
+        logger.error("Unexpected error at [${request.method}] ${request.requestURI}", ex)
         val response = ErrorResponse(
             error = ErrorDetail(
                 code = "INTERNAL_ERROR",

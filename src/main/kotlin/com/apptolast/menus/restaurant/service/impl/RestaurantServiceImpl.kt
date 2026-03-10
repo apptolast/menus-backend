@@ -59,6 +59,7 @@ class RestaurantServiceImpl(
 
     private fun Restaurant.toResponse() = RestaurantResponse(
         id = id,
+        tenantId = tenantId,
         name = name,
         slug = slug,
         description = description,

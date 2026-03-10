@@ -34,10 +34,14 @@ class DishServiceImpl(
 ) : DishService {
 
     @Transactional(readOnly = true)
-    override fun findBySectionWithFilter(sectionId: UUID, userAllergenCodes: List<String>?): List<DishResponse> =
-        dishRepository.findWithAllergensBySectionId(sectionId).map { dish ->
+    override fun findBySectionWithFilter(sectionId: UUID, restaurantId: UUID, userAllergenCodes: List<String>?): List<DishResponse> {
+        if (!menuSectionRepository.existsByIdAndMenuRestaurantId(sectionId, restaurantId)) {
+            throw ResourceNotFoundException("SECTION_NOT_FOUND", "Section not found for restaurant")
+        }
+        return dishRepository.findWithAllergensBySectionId(sectionId).map { dish ->
             dish.toResponse(userAllergenCodes)
         }
+    }
 
     @Transactional(readOnly = true)
     override fun findByRestaurant(restaurantId: UUID): List<DishResponse> =
