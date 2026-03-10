@@ -1,5 +1,6 @@
 package com.apptolast.menus.audit.model.entity
 
+import com.apptolast.menus.dish.model.enum.ContainmentLevel
 import jakarta.persistence.*
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -45,10 +46,3 @@ enum class AuditAction {
     UPDATE
 }
 
-enum class ContainmentLevel {
-    // Adjust these values to exactly match the DB's allowed containment levels.
-    NONE,
-    LOW,
-    MEDIUM,
-    HIGH
-}

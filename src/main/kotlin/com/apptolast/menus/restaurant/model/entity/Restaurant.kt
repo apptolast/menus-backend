@@ -9,7 +9,7 @@ import java.util.UUID
 class Restaurant(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null,
+    var id: UUID = UUID.randomUUID(),
 
     @Column(name = "tenant_id", nullable = false, unique = true)
     val tenantId: UUID,

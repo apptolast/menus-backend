@@ -2,6 +2,7 @@ package com.apptolast.menus.dish.service.impl
 
 import com.apptolast.menus.allergen.repository.AllergenRepository
 import com.apptolast.menus.audit.model.entity.AllergenAuditLog
+import com.apptolast.menus.audit.model.entity.AuditAction
 import com.apptolast.menus.audit.repository.AllergenAuditLogRepository
 import com.apptolast.menus.dish.dto.request.DishAllergenRequest
 import com.apptolast.menus.dish.dto.request.DishRequest
@@ -92,7 +93,7 @@ class DishServiceImpl(
         val containmentLevel = ContainmentLevel.valueOf(request.containmentLevel)
 
         val existing = dishAllergenRepository.findByDishIdAndAllergenId(dishId, allergen.id)
-        val oldLevel = existing.map { it.containmentLevel.name }.orElse(null)
+        val oldLevel = existing.map { it.containmentLevel }.orElse(null)
 
         val dishAllergen = existing.map { da ->
             da.containmentLevel = containmentLevel
@@ -115,9 +116,9 @@ class DishServiceImpl(
                 allergenId = allergen.id,
                 tenantId = tenantId,
                 changedByUuid = changedByProfileUuid,
-                action = if (oldLevel == null) "ADD" else "UPDATE",
+                action = if (oldLevel == null) AuditAction.ADD else AuditAction.UPDATE,
                 oldLevel = oldLevel,
-                newLevel = containmentLevel.name
+                newLevel = containmentLevel
             )
         )
         return findDishOrThrow(dishId).toResponse(null)
@@ -132,8 +133,8 @@ class DishServiceImpl(
                 allergenId = allergenId,
                 tenantId = tenantId,
                 changedByUuid = changedByProfileUuid,
-                action = "REMOVE",
-                oldLevel = existing.containmentLevel.name,
+                action = AuditAction.REMOVE,
+                oldLevel = existing.containmentLevel,
                 newLevel = null
             )
         )
