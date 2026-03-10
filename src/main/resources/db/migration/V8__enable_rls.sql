@@ -7,12 +7,9 @@ ALTER TABLE menu_section ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dish ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dish_allergen ENABLE ROW LEVEL SECURITY;
 
--- Only superuser/postgres can bypass RLS (for migrations)
-ALTER TABLE restaurant FORCE ROW LEVEL SECURITY;
-ALTER TABLE menu FORCE ROW LEVEL SECURITY;
-ALTER TABLE menu_section FORCE ROW LEVEL SECURITY;
-ALTER TABLE dish FORCE ROW LEVEL SECURITY;
-ALTER TABLE dish_allergen FORCE ROW LEVEL SECURITY;
+-- NOTE: FORCE ROW LEVEL SECURITY is intentionally omitted so that the table owner
+-- (the application DB user used by Flyway) can bypass RLS for migrations.
+-- RLS policies below enforce tenant isolation for all non-owner connections.
 
 CREATE POLICY tenant_isolation_restaurant ON restaurant
     USING (tenant_id = current_setting('app.current_tenant', true)::UUID);

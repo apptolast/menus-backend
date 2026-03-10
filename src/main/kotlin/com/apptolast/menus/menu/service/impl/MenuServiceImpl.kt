@@ -43,7 +43,7 @@ class MenuServiceImpl(
     }
 
     override fun update(id: UUID, tenantId: UUID, request: MenuRequest): MenuResponse {
-        val menu = findMenuOrThrow(id)
+        val menu = findMenuForTenantOrThrow(id, tenantId)
         menu.name = request.name
         menu.description = request.description
         menu.displayOrder = request.displayOrder
@@ -52,7 +52,7 @@ class MenuServiceImpl(
     }
 
     override fun archive(id: UUID, tenantId: UUID) {
-        val menu = findMenuOrThrow(id)
+        val menu = findMenuForTenantOrThrow(id, tenantId)
         menu.isArchived = true
         menu.updatedAt = OffsetDateTime.now()
         menuRepository.save(menu)
@@ -70,7 +70,7 @@ class MenuServiceImpl(
     }
 
     override fun updateSection(sectionId: UUID, tenantId: UUID, request: SectionRequest): SectionResponse {
-        val section = menuSectionRepository.findById(sectionId)
+        val section = menuSectionRepository.findByIdAndTenantId(sectionId, tenantId)
             .orElseThrow { ResourceNotFoundException("SECTION_NOT_FOUND", "Menu section not found") }
         section.name = request.name
         section.displayOrder = request.displayOrder
@@ -78,7 +78,7 @@ class MenuServiceImpl(
     }
 
     override fun deleteSection(sectionId: UUID, tenantId: UUID) {
-        if (!menuSectionRepository.existsById(sectionId)) {
+        if (!menuSectionRepository.existsByIdAndTenantId(sectionId, tenantId)) {
             throw ResourceNotFoundException("SECTION_NOT_FOUND", "Menu section not found")
         }
         menuSectionRepository.deleteById(sectionId)
@@ -86,6 +86,10 @@ class MenuServiceImpl(
 
     private fun findMenuOrThrow(id: UUID): Menu =
         menuRepository.findById(id)
+            .orElseThrow { ResourceNotFoundException("MENU_NOT_FOUND", "Menu not found") }
+
+    private fun findMenuForTenantOrThrow(id: UUID, tenantId: UUID): Menu =
+        menuRepository.findByIdAndTenantId(id, tenantId)
             .orElseThrow { ResourceNotFoundException("MENU_NOT_FOUND", "Menu not found") }
 
     private fun Menu.toResponse() = MenuResponse(

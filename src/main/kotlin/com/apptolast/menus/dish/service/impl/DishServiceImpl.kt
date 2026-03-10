@@ -41,7 +41,7 @@ class DishServiceImpl(
 
     @Transactional(readOnly = true)
     override fun findByRestaurant(restaurantId: UUID): List<DishResponse> =
-        dishRepository.findBySectionMenuRestaurantId(restaurantId).map { it.toResponse(null) }
+        dishRepository.findWithAllergensByRestaurantId(restaurantId).map { it.toResponse(null) }
 
     override fun create(tenantId: UUID, request: DishRequest): DishResponse {
         val section = menuSectionRepository.findById(request.sectionId)
@@ -63,7 +63,7 @@ class DishServiceImpl(
     }
 
     override fun update(id: UUID, tenantId: UUID, request: DishRequest): DishResponse {
-        val dish = findDishOrThrow(id)
+        val dish = findDishForTenantOrThrow(id, tenantId)
         dish.name = request.name
         dish.description = request.description
         dish.price = request.price
@@ -74,7 +74,7 @@ class DishServiceImpl(
     }
 
     override fun delete(id: UUID, tenantId: UUID) {
-        if (!dishRepository.existsById(id)) {
+        if (!dishRepository.existsByIdAndTenantId(id, tenantId)) {
             throw ResourceNotFoundException("DISH_NOT_FOUND", "Dish not found")
         }
         dishRepository.deleteById(id)
@@ -142,6 +142,10 @@ class DishServiceImpl(
 
     private fun findDishOrThrow(id: UUID): Dish =
         dishRepository.findById(id)
+            .orElseThrow { ResourceNotFoundException("DISH_NOT_FOUND", "Dish not found") }
+
+    private fun findDishForTenantOrThrow(id: UUID, tenantId: UUID): Dish =
+        dishRepository.findByIdAndTenantId(id, tenantId)
             .orElseThrow { ResourceNotFoundException("DISH_NOT_FOUND", "Dish not found") }
 
     private fun saveAllergen(dish: Dish, req: DishAllergenRequest, tenantId: UUID) {
