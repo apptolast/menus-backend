@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "teammateMode": "in-process",
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew *)",
+      "Bash(gradle *)",
+      "Bash(java *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git branch *)",
+      "Bash(git checkout *)",
+      "Bash(git stash *)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(docker compose *)",
+      "Bash(docker build *)",
+      "Bash(docker images *)",
+      "Bash(docker ps *)",
+      "Bash(kubectl get *)",
+      "Bash(kubectl describe *)",
+      "Bash(kubectl apply *)",
+      "Bash(kubectl create *)",
+      "Bash(kubectl logs *)",
+      "Bash(kubectl rollout *)",
+      "Bash(mkdir *)",
+      "Bash(ls *)",
+      "Bash(curl -s *)",
+      "Bash(jq *)",
+      "Bash(psql *)",
+      "Edit(*)",
+      "Write(*)",
+      "Read(*)"
+    ],
+    "deny": [
+      "Bash(./gradlew publish *)",
+      "Bash(git push * main)",
+      "Bash(git push * master)",
+      "Bash(git push --force *)",
+      "Bash(git reset --hard *)",
+      "Bash(kubectl delete *)",
+      "Bash(kubectl drain *)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(**/*.key)",
+      "Read(**/*.pem)",
+      "Read(~/.ssh/*)",
+      "Read(~/.kube/config)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/format-on-save.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/security-check.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/validate-task.sh",
+            "timeout": 120
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Revisa el TaskList para tareas pendientes. Si no hay tareas disponibles, notifica al team-lead que has terminado y espera instrucciones.' >&2; exit 2",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
