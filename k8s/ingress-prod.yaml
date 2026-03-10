@@ -1,0 +1,19 @@
+# Traefik IngressRoute for production environment
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: menus-backend-prod
+  namespace: menus-backend
+  annotations:
+    kubernetes.io/description: "Menus Backend API — Production"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`menus-api.apptolast.com`)
+      kind: Rule
+      services:
+        - name: menus-backend
+          port: 80
+  tls:
+    certResolver: letsencrypt

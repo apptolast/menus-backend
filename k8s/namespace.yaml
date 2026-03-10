@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: menus-backend
+  labels:
+    app.kubernetes.io/name: menus-backend
+    app.kubernetes.io/managed-by: rancher
