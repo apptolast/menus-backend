@@ -5,6 +5,7 @@ import com.apptolast.menus.auth.dto.request.RegisterRequest
 import com.apptolast.menus.auth.dto.response.AuthResponse
 import com.apptolast.menus.auth.service.AuthService
 import com.apptolast.menus.auth.service.GoogleTokenVerifier
+import com.apptolast.menus.config.AppConfig
 import com.apptolast.menus.config.EncryptionConfig
 import com.apptolast.menus.consumer.model.entity.OAuthAccount
 import com.apptolast.menus.consumer.model.entity.UserAccount
@@ -27,7 +28,8 @@ class AuthServiceImpl(
     private val jwtTokenProvider: JwtTokenProvider,
     private val passwordEncoder: PasswordEncoder,
     private val encryptionConfig: EncryptionConfig,
-    private val googleTokenVerifier: GoogleTokenVerifier
+    private val googleTokenVerifier: GoogleTokenVerifier,
+    private val appConfig: AppConfig
 ) : AuthService {
 
     override fun register(request: RegisterRequest): AuthResponse {
@@ -48,14 +50,14 @@ class AuthServiceImpl(
     override fun login(request: LoginRequest): AuthResponse {
         val emailHash = encryptionConfig.hashEmail(request.email)
         val user = userAccountRepository.findByEmailHash(emailHash)
-            .orElseThrow { ResourceNotFoundException("INVALID_CREDENTIALS", "Invalid credentials") }
+            .orElseThrow { ForbiddenException("INVALID_CREDENTIALS", "Invalid credentials") }
         if (!user.isActive) {
             throw ForbiddenException("ACCOUNT_DISABLED", "Account is disabled")
         }
         val hash = user.passwordHash
-            ?: throw ResourceNotFoundException("INVALID_CREDENTIALS", "Invalid credentials")
+            ?: throw ForbiddenException("INVALID_CREDENTIALS", "Invalid credentials")
         if (!passwordEncoder.matches(request.password, hash)) {
-            throw ResourceNotFoundException("INVALID_CREDENTIALS", "Invalid credentials")
+            throw ForbiddenException("INVALID_CREDENTIALS", "Invalid credentials")
         }
         return buildAuthResponse(user)
     }
@@ -124,6 +126,6 @@ class AuthServiceImpl(
         AuthResponse(
             accessToken = jwtTokenProvider.generateAccessToken(user.id, user.role.name),
             refreshToken = jwtTokenProvider.generateRefreshToken(user.id),
-            expiresIn = 900
+            expiresIn = appConfig.jwt.accessExpiration
         )
 }

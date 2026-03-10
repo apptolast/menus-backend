@@ -24,6 +24,12 @@ class ConsentService(
         ) != null
 
     fun grantConsent(profileUuid: UUID, ipAddress: String?, userAgent: String?) {
+        val existing = consentRecordRepository.findByProfileUuidAndConsentTypeAndGrantedTrueAndRevokedAtIsNull(
+            profileUuid, HEALTH_DATA_CONSENT
+        )
+        if (existing != null) {
+            return
+        }
         val record = ConsentRecord(
             profileUuid = profileUuid,
             consentType = HEALTH_DATA_CONSENT,

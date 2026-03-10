@@ -53,6 +53,9 @@ dependencies {
     // Google OAuth2
     implementation("com.google.api-client:google-api-client:2.7.2")
 
+    // AOP for tenant context propagation
+    implementation("org.aspectj:aspectjweaver")
+
     // OpenAPI / Swagger
     // springdoc-openapi 3.0.2 targets Spring Boot 4.0.3 — compatible
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")

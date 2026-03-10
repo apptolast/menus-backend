@@ -25,9 +25,9 @@ class MenuServiceImpl(
     @Transactional(readOnly = true)
     override fun findByRestaurant(restaurantId: UUID, includeArchived: Boolean): List<MenuResponse> {
         val menus = if (includeArchived)
-            menuRepository.findByRestaurantIdOrderByDisplayOrderAsc(restaurantId)
+            menuRepository.findAllByRestaurantIdWithSections(restaurantId)
         else
-            menuRepository.findByRestaurantIdAndIsArchivedFalseOrderByDisplayOrderAsc(restaurantId)
+            menuRepository.findActiveByRestaurantIdWithSections(restaurantId)
         return menus.map { it.toResponse() }
     }
 
@@ -69,17 +69,17 @@ class MenuServiceImpl(
         return menuSectionRepository.save(section).toResponse()
     }
 
-    override fun updateSection(sectionId: UUID, tenantId: UUID, request: SectionRequest): SectionResponse {
-        val section = menuSectionRepository.findById(sectionId)
-            .orElseThrow { ResourceNotFoundException("SECTION_NOT_FOUND", "Menu section not found") }
+    override fun updateSection(menuId: UUID, sectionId: UUID, tenantId: UUID, request: SectionRequest): SectionResponse {
+        val section = menuSectionRepository.findByIdAndMenuId(sectionId, menuId)
+            .orElseThrow { ResourceNotFoundException("SECTION_NOT_FOUND", "Menu section not found in this menu") }
         section.name = request.name
         section.displayOrder = request.displayOrder
         return menuSectionRepository.save(section).toResponse()
     }
 
-    override fun deleteSection(sectionId: UUID, tenantId: UUID) {
-        if (!menuSectionRepository.existsById(sectionId)) {
-            throw ResourceNotFoundException("SECTION_NOT_FOUND", "Menu section not found")
+    override fun deleteSection(menuId: UUID, sectionId: UUID, tenantId: UUID) {
+        if (!menuSectionRepository.existsByIdAndMenuId(sectionId, menuId)) {
+            throw ResourceNotFoundException("SECTION_NOT_FOUND", "Menu section not found in this menu")
         }
         menuSectionRepository.deleteById(sectionId)
     }

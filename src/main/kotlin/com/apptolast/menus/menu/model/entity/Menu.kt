@@ -36,5 +36,6 @@ class Menu(
     var updatedAt: OffsetDateTime = OffsetDateTime.now(),
 
     @OneToMany(mappedBy = "menu", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    @jakarta.persistence.OrderBy("displayOrder ASC")
     val sections: MutableList<MenuSection> = mutableListOf()
 )

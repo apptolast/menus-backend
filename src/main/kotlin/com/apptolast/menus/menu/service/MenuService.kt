@@ -12,6 +12,6 @@ interface MenuService {
     fun update(id: UUID, tenantId: UUID, request: MenuRequest): MenuResponse
     fun archive(id: UUID, tenantId: UUID)
     fun addSection(menuId: UUID, tenantId: UUID, request: SectionRequest): SectionResponse
-    fun updateSection(sectionId: UUID, tenantId: UUID, request: SectionRequest): SectionResponse
-    fun deleteSection(sectionId: UUID, tenantId: UUID)
+    fun updateSection(menuId: UUID, sectionId: UUID, tenantId: UUID, request: SectionRequest): SectionResponse
+    fun deleteSection(menuId: UUID, sectionId: UUID, tenantId: UUID)
 }

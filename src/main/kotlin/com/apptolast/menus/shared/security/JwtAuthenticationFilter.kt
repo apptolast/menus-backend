@@ -1,6 +1,9 @@
 package com.apptolast.menus.shared.security
 
+import com.apptolast.menus.config.TenantContext
+import com.apptolast.menus.consumer.model.enum.UserRole
 import com.apptolast.menus.consumer.repository.UserAccountRepository
+import com.apptolast.menus.restaurant.repository.RestaurantRepository
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -13,7 +16,8 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Component
 class JwtAuthenticationFilter(
     private val jwtTokenProvider: JwtTokenProvider,
-    private val userAccountRepository: UserAccountRepository
+    private val userAccountRepository: UserAccountRepository,
+    private val restaurantRepository: RestaurantRepository
 ) : OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -39,6 +43,12 @@ class JwtAuthenticationFilter(
                     )
                     authentication.details = WebAuthenticationDetailsSource().buildDetails(request)
                     SecurityContextHolder.getContext().authentication = authentication
+
+                    if (user.role == UserRole.RESTAURANT_OWNER) {
+                        restaurantRepository.findByOwnerId(user.id).ifPresent { restaurant ->
+                            TenantContext.setTenant(restaurant.tenantId.toString())
+                        }
+                    }
                 }
             }
         }

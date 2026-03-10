@@ -41,6 +41,8 @@ class SecurityConfig(
                     ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/allergens").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/restaurants", "/api/v1/restaurants/*").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/restaurants/*/menu").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/restaurants/*/sections/*/dishes").permitAll()
                     .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                     .requestMatchers(
                         "/swagger-ui/**",
