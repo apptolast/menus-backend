@@ -17,11 +17,11 @@ class DishAllergen(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dish_id", nullable = false)
-    val dish: Dish = Dish(),
+    val dish: Dish,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "allergen_id", nullable = false)
-    val allergen: Allergen = Allergen(),
+    val allergen: Allergen,
 
     @Column(name = "tenant_id", nullable = false)
     val tenantId: UUID = UUID.randomUUID(),

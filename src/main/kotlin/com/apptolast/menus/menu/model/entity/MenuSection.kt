@@ -12,7 +12,7 @@ class MenuSection(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_id", nullable = false)
-    val menu: Menu = Menu(),
+    val menu: Menu,
 
     @Column(name = "tenant_id", nullable = false)
     val tenantId: UUID = UUID.randomUUID(),

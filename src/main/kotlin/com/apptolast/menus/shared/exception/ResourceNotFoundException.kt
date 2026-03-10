@@ -1,6 +1,6 @@
 package com.apptolast.menus.shared.exception
 
 class ResourceNotFoundException(
-    errorCode: String = "RESOURCE_NOT_FOUND",
-    message: String
+    message: String,
+    errorCode: String = "RESOURCE_NOT_FOUND"
 ) : BusinessException(errorCode, message, 404)

@@ -15,7 +15,7 @@ class Dish(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "section_id", nullable = false)
-    val section: MenuSection = MenuSection(),
+    val section: MenuSection,
 
     @Column(name = "tenant_id", nullable = false)
     val tenantId: UUID = UUID.randomUUID(),

@@ -6,7 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 data class AppConfig(
     val jwt: JwtProperties = JwtProperties(),
     val encryption: EncryptionProperties = EncryptionProperties(),
-    val cors: CorsProperties = CorsProperties()
+    val cors: CorsProperties = CorsProperties(),
+    val google: GoogleProperties = GoogleProperties()
 ) {
     data class JwtProperties(
         val secret: String = "",
@@ -20,5 +21,9 @@ data class AppConfig(
 
     data class CorsProperties(
         val allowedOrigins: String = "http://localhost:3000"
+    )
+
+    data class GoogleProperties(
+        val clientId: String = ""
     )
 }

@@ -10,6 +10,7 @@ data class UserPrincipal(
     val userId: UUID,
     val profileUuid: UUID,
     val role: UserRole,
+    val tenantId: UUID?,
     private val _username: String
 ) : UserDetails {
     override fun getAuthorities(): Collection<GrantedAuthority> =

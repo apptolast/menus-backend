@@ -1,6 +1,6 @@
 package com.apptolast.menus.shared.exception
 
 class ConflictException(
-    errorCode: String = "CONFLICT",
-    message: String
+    message: String,
+    errorCode: String = "CONFLICT"
 ) : BusinessException(errorCode, message, 409)
