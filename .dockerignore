@@ -1,0 +1,10 @@
+.git
+.gradle
+build
+*.md
+.env
+.env.*
+!.env.example
+docs
+k8s
+scripts
