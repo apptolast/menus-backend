@@ -9,13 +9,13 @@ import java.util.UUID
 class Restaurant(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    val id: UUID = UUID.randomUUID(),
+    var id: UUID? = null,
 
     @Column(name = "tenant_id", nullable = false, unique = true)
-    val tenantId: UUID = UUID.randomUUID(),
+    val tenantId: UUID,
 
     @Column(name = "owner_id", nullable = false)
-    val ownerId: UUID = UUID.randomUUID(),
+    val ownerId: UUID,
 
     @Column(name = "name", nullable = false, length = 255)
     var name: String = "",
