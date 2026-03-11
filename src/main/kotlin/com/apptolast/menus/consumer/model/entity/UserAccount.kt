@@ -25,7 +25,7 @@ class UserAccount(
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 30)
-    val role: UserRole = UserRole.CONSUMER,
+    var role: UserRole = UserRole.CONSUMER,
 
     @Column(name = "is_active", nullable = false)
     val isActive: Boolean = true,

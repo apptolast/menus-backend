@@ -4,11 +4,13 @@ import com.apptolast.menus.auth.dto.request.GoogleCallbackRequest
 import com.apptolast.menus.auth.dto.request.LoginRequest
 import com.apptolast.menus.auth.dto.request.RefreshTokenRequest
 import com.apptolast.menus.auth.dto.request.RegisterRequest
+import com.apptolast.menus.auth.dto.request.RegisterRestaurantRequest
 import com.apptolast.menus.auth.dto.response.AuthResponse
 import com.apptolast.menus.auth.service.AuthService
 import com.apptolast.menus.auth.service.ConsentService
 import com.apptolast.menus.shared.security.UserPrincipal
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
@@ -29,6 +31,17 @@ class AuthController(
     @Operation(summary = "Register with email and password")
     fun register(@Valid @RequestBody request: RegisterRequest): ResponseEntity<AuthResponse> =
         ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request))
+
+    @PostMapping("/register-restaurant")
+    @Operation(
+        summary = "Register as restaurant owner",
+        description = "Creates user + restaurant + BASIC subscription. If email exists as CONSUMER, promotes to RESTAURANT_OWNER."
+    )
+    @ApiResponse(responseCode = "201", description = "Restaurant owner registered successfully")
+    fun registerRestaurant(
+        @Valid @RequestBody request: RegisterRestaurantRequest
+    ): ResponseEntity<AuthResponse> =
+        ResponseEntity.status(HttpStatus.CREATED).body(authService.registerRestaurant(request))
 
     @PostMapping("/login")
     @Operation(summary = "Login with email and password")

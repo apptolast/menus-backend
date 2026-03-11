@@ -8,6 +8,7 @@ import com.apptolast.menus.consumer.model.entity.UserAccount
 import com.apptolast.menus.consumer.model.enum.UserRole
 import com.apptolast.menus.consumer.repository.OAuthAccountRepository
 import com.apptolast.menus.consumer.repository.UserAccountRepository
+import com.apptolast.menus.restaurant.repository.RestaurantRepository
 import com.apptolast.menus.shared.exception.ConflictException
 import com.apptolast.menus.shared.security.JwtTokenProvider
 import jakarta.persistence.EntityManager
@@ -32,6 +33,7 @@ class AuthServiceTest {
 
     @Mock lateinit var userAccountRepository: UserAccountRepository
     @Mock lateinit var oAuthAccountRepository: OAuthAccountRepository
+    @Mock lateinit var restaurantRepository: RestaurantRepository
     @Mock lateinit var jwtTokenProvider: JwtTokenProvider
     @Mock lateinit var encryptionConfig: EncryptionConfig
     @Mock lateinit var googleTokenVerifier: GoogleTokenVerifier
@@ -45,6 +47,7 @@ class AuthServiceTest {
         authService = AuthServiceImpl(
             userAccountRepository,
             oAuthAccountRepository,
+            restaurantRepository,
             jwtTokenProvider,
             passwordEncoder,
             encryptionConfig,

@@ -37,7 +37,10 @@ class TenantFilter(private val restaurantRepository: RestaurantRepository) : Onc
             val auth = SecurityContextHolder.getContext().authentication
             if (auth != null && auth.isAuthenticated && auth.principal is UserPrincipal) {
                 val principal = auth.principal as UserPrincipal
-                if (principal.role == UserRole.RESTAURANT_OWNER) {
+                val tenantId = principal.tenantId
+                if (tenantId != null) {
+                    TenantContext.setTenant(tenantId.toString())
+                } else if (principal.role == UserRole.RESTAURANT_OWNER) {
                     restaurantRepository.findByOwnerId(principal.userId).ifPresent { restaurant ->
                         TenantContext.setTenant(restaurant.tenantId.toString())
                     }
