@@ -2,6 +2,10 @@
 
 Sistema de gestión de alérgenos para restauración. Backend API REST con Spring Boot 4.0 + Kotlin 2.2 + PostgreSQL 16 + Kubernetes (Rancher/Traefik).
 
+# Instrucciones , para el uso del equipo de agentes y subagentes
+
+Tienes que utilizar siempre tu equipo de agentes y subagentes , A SU VEZ TIENES QUE BUSCAR SIEMPRE DOCUMENTACION OFICIAL DE LA TECNOLOGIA , que estés utilizando , para minimizar los errores al máximo
+
 ## Descripción del Proyecto
 Plataforma B2B/B2C que digitaliza la declaración obligatoria de los **14 alérgenos EU** (Reglamento UE 1169/2011) para restaurantes españoles. Los consumidores reciben filtrado de menú tipo semáforo (SAFE/RISK/DANGER). Los restaurantes gestionan menús, platos y alérgenos desde un admin dashboard.
 
