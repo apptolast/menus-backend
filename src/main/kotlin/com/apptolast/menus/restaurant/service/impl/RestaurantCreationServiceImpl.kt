@@ -57,7 +57,7 @@ class RestaurantCreationServiceImpl(
             name = name,
             slug = finalSlug
         )
-        entityManager.persist(restaurant)
+        entityManager.merge(restaurant)
 
         val subscription = Subscription(
             restaurantId = restaurant.id,
@@ -65,7 +65,7 @@ class RestaurantCreationServiceImpl(
             maxMenus = 1,
             maxDishes = 50
         )
-        entityManager.persist(subscription)
+        entityManager.merge(subscription)
 
         if (user.role != UserRole.RESTAURANT_OWNER) {
             user.role = UserRole.RESTAURANT_OWNER
