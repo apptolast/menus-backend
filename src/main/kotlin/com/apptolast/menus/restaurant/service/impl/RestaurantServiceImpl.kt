@@ -22,7 +22,11 @@ class RestaurantServiceImpl(
 
     override fun findAll(name: String?, page: Int, size: Int): PageResponse<RestaurantResponse> {
         val pageable = PageRequest.of(page, size, Sort.by("name").ascending())
-        val result = restaurantRepository.findActiveByNameContaining(name, pageable)
+        val result = if (name.isNullOrBlank()) {
+            restaurantRepository.findByIsActiveTrue(pageable)
+        } else {
+            restaurantRepository.findActiveByNameContaining(name, pageable)
+        }
         return PageResponse(
             content = result.content.map { it.toResponse() },
             page = result.number,

@@ -15,6 +15,7 @@ import com.apptolast.menus.shared.exception.ConflictException
 import com.apptolast.menus.shared.exception.ForbiddenException
 import com.apptolast.menus.shared.exception.ResourceNotFoundException
 import com.apptolast.menus.shared.security.JwtTokenProvider
+import jakarta.persistence.EntityManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -28,7 +29,8 @@ class AuthServiceImpl(
     private val jwtTokenProvider: JwtTokenProvider,
     private val passwordEncoder: PasswordEncoder,
     private val encryptionConfig: EncryptionConfig,
-    private val googleTokenVerifier: GoogleTokenVerifier
+    private val googleTokenVerifier: GoogleTokenVerifier,
+    private val entityManager: EntityManager
 ) : AuthService {
 
     override fun register(request: RegisterRequest): AuthResponse {
@@ -42,8 +44,8 @@ class AuthServiceImpl(
             passwordHash = passwordEncoder.encode(request.password),
             role = UserRole.CONSUMER
         )
-        val saved = userAccountRepository.save(user)
-        return buildAuthResponse(saved)
+        entityManager.persist(user)
+        return buildAuthResponse(user)
     }
 
     override fun login(request: LoginRequest): AuthResponse {
@@ -99,25 +101,23 @@ class AuthServiceImpl(
                     providerId = googleUser.googleId,
                     email = encryptionConfig.encryptEmail(googleUser.email)
                 )
-                oAuthAccountRepository.save(oauth)
+                entityManager.persist(oauth)
                 u
             } else {
-                val newUser = userAccountRepository.save(
-                    UserAccount(
-                        email = encryptionConfig.encryptEmail(googleUser.email),
-                        emailHash = emailHash,
-                        passwordHash = null,
-                        role = UserRole.CONSUMER
-                    )
+                val newUser = UserAccount(
+                    email = encryptionConfig.encryptEmail(googleUser.email),
+                    emailHash = emailHash,
+                    passwordHash = null,
+                    role = UserRole.CONSUMER
                 )
-                oAuthAccountRepository.save(
-                    OAuthAccount(
-                        userId = newUser.id,
-                        provider = "GOOGLE",
-                        providerId = googleUser.googleId,
-                        email = encryptionConfig.encryptEmail(googleUser.email)
-                    )
+                entityManager.persist(newUser)
+                val oauthAccount = OAuthAccount(
+                    userId = newUser.id,
+                    provider = "GOOGLE",
+                    providerId = googleUser.googleId,
+                    email = encryptionConfig.encryptEmail(googleUser.email)
                 )
+                entityManager.persist(oauthAccount)
                 newUser
             }
         }
@@ -129,7 +129,7 @@ class AuthServiceImpl(
 
     private fun buildAuthResponse(user: UserAccount): AuthResponse =
         AuthResponse(
-            accessToken = jwtTokenProvider.generateAccessToken(user.id, user.role.name),
+            accessToken = jwtTokenProvider.generateAccessToken(user.id, user.role.name, user.profileUuid),
             refreshToken = jwtTokenProvider.generateRefreshToken(user.id),
             expiresIn = 900
         )

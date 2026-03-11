@@ -10,6 +10,7 @@ import com.apptolast.menus.consumer.repository.OAuthAccountRepository
 import com.apptolast.menus.consumer.repository.UserAccountRepository
 import com.apptolast.menus.shared.exception.ConflictException
 import com.apptolast.menus.shared.security.JwtTokenProvider
+import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
@@ -34,6 +35,7 @@ class AuthServiceTest {
     @Mock lateinit var jwtTokenProvider: JwtTokenProvider
     @Mock lateinit var encryptionConfig: EncryptionConfig
     @Mock lateinit var googleTokenVerifier: GoogleTokenVerifier
+    @Mock lateinit var entityManager: EntityManager
 
     private val passwordEncoder = BCryptPasswordEncoder()
     private lateinit var authService: AuthService
@@ -46,7 +48,8 @@ class AuthServiceTest {
             jwtTokenProvider,
             passwordEncoder,
             encryptionConfig,
-            googleTokenVerifier
+            googleTokenVerifier,
+            entityManager
         )
     }
 
@@ -60,13 +63,14 @@ class AuthServiceTest {
         val email = "test@example.com"
         val hash = "abc123hash"
         val encrypted = "encrypted".toByteArray()
-        val savedUser = UserAccount(email = encrypted, emailHash = hash, role = UserRole.CONSUMER)
 
         `when`(encryptionConfig.hashEmail(email)).thenReturn(hash)
         `when`(encryptionConfig.encryptEmail(email)).thenReturn(encrypted)
         `when`(userAccountRepository.existsByEmailHash(hash)).thenReturn(false)
-        `when`(userAccountRepository.save(anyMatcher(UserAccount::class.java))).thenReturn(savedUser)
-        `when`(jwtTokenProvider.generateAccessToken(anyMatcher(UUID::class.java), anyString())).thenReturn("access-token")
+        `when`(jwtTokenProvider.generateAccessToken(
+            anyMatcher(UUID::class.java), anyString(),
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()
+        )).thenReturn("access-token")
         `when`(jwtTokenProvider.generateRefreshToken(anyMatcher(UUID::class.java))).thenReturn("refresh-token")
 
         val response = authService.register(RegisterRequest(email, "Password1!"))
@@ -104,7 +108,10 @@ class AuthServiceTest {
 
         `when`(encryptionConfig.hashEmail(email)).thenReturn(emailHash)
         `when`(userAccountRepository.findByEmailHash(emailHash)).thenReturn(Optional.of(user))
-        `when`(jwtTokenProvider.generateAccessToken(anyMatcher(UUID::class.java), anyString())).thenReturn("access-token")
+        `when`(jwtTokenProvider.generateAccessToken(
+            anyMatcher(UUID::class.java), anyString(),
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()
+        )).thenReturn("access-token")
         `when`(jwtTokenProvider.generateRefreshToken(anyMatcher(UUID::class.java))).thenReturn("refresh-token")
 
         val response = authService.login(LoginRequest(email, password))

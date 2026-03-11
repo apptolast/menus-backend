@@ -12,6 +12,8 @@ interface RestaurantRepository : JpaRepository<Restaurant, UUID> {
     fun findBySlug(slug: String): Optional<Restaurant>
     fun findByOwnerId(ownerId: UUID): Optional<Restaurant>
 
-    @Query("SELECT r FROM Restaurant r WHERE r.isActive = true AND (:name IS NULL OR LOWER(r.name) LIKE LOWER(CONCAT('%', :name, '%')))")
-    fun findActiveByNameContaining(name: String?, pageable: Pageable): Page<Restaurant>
+    fun findByIsActiveTrue(pageable: Pageable): Page<Restaurant>
+
+    @Query("SELECT r FROM Restaurant r WHERE r.isActive = true AND LOWER(r.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    fun findActiveByNameContaining(name: String, pageable: Pageable): Page<Restaurant>
 }

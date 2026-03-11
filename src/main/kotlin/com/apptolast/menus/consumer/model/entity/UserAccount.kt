@@ -9,7 +9,6 @@ import java.util.UUID
 @Table(name = "user_account")
 class UserAccount(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID = UUID.randomUUID(),
 
     @Column(name = "email", nullable = false, unique = true, columnDefinition = "BYTEA")

@@ -1,6 +1,8 @@
 package com.apptolast.menus.consumer.model.entity
 
 import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -14,8 +16,8 @@ class UserAllergenProfile(
     @Column(name = "profile_uuid", nullable = false, unique = true)
     val profileUuid: UUID = UUID.randomUUID(),
 
-    @Column(name = "allergen_codes", columnDefinition = "TEXT[]", nullable = false)
-    @Convert(converter = StringArrayConverter::class)
+    @Column(name = "allergen_codes", nullable = false)
+    @JdbcTypeCode(SqlTypes.ARRAY)
     var allergenCodes: List<String> = emptyList(),
 
     @Column(name = "severity_notes", columnDefinition = "TEXT")

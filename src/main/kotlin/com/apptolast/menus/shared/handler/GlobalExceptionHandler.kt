@@ -16,6 +16,8 @@ import java.time.OffsetDateTime
 @RestControllerAdvice
 class GlobalExceptionHandler {
 
+    private val log = org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
+
     @ExceptionHandler(BadCredentialsException::class)
     fun handleBadCredentials(
         ex: BadCredentialsException,
@@ -75,6 +77,7 @@ class GlobalExceptionHandler {
         ex: Exception,
         request: HttpServletRequest
     ): ResponseEntity<ErrorResponse> {
+        log.error("Unhandled exception on {} {}: {}", request.method, request.requestURI, ex.message, ex)
         val response = ErrorResponse(
             error = ErrorDetail(
                 code = "INTERNAL_ERROR",

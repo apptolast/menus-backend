@@ -10,7 +10,6 @@ import java.util.UUID
 )
 class OAuthAccount(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID = UUID.randomUUID(),
 
     @Column(name = "user_id", nullable = false)
