@@ -25,6 +25,7 @@ spec:
       containers:
         - name: menus-backend
           image: apptolast/menus-backend:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           envFrom:
