@@ -9,7 +9,6 @@ import java.util.UUID
 @Table(name = "allergen_audit_log")
 class AllergenAuditLog(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID = UUID.randomUUID(),
 
     @Column(name = "dish_id", nullable = false)

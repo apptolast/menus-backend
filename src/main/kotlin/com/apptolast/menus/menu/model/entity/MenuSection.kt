@@ -7,7 +7,6 @@ import java.util.UUID
 @Table(name = "menu_section")
 class MenuSection(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID = UUID.randomUUID(),
 
     @ManyToOne(fetch = FetchType.LAZY)

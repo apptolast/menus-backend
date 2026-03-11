@@ -205,14 +205,14 @@ class AuthServiceImpl(
             name = name,
             slug = finalSlug
         )
-        entityManager.merge(restaurant)
+        entityManager.persist(restaurant)
         val subscription = Subscription(
             restaurantId = restaurant.id,
             tier = SubscriptionTier.BASIC,
             maxMenus = 1,
             maxDishes = 50
         )
-        entityManager.merge(subscription)
+        entityManager.persist(subscription)
         return restaurant
     }
 

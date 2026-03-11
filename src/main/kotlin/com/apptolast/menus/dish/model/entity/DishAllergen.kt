@@ -12,7 +12,6 @@ import java.util.UUID
 )
 class DishAllergen(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID = UUID.randomUUID(),
 
     @ManyToOne(fetch = FetchType.LAZY)

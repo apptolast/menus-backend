@@ -8,7 +8,6 @@ import java.util.UUID
 @Table(name = "restaurant")
 class Restaurant(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID = UUID.randomUUID(),
 
     @Column(name = "tenant_id", nullable = false, unique = true)

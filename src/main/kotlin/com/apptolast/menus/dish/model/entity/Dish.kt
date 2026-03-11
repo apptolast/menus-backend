@@ -10,7 +10,6 @@ import java.util.UUID
 @Table(name = "dish")
 class Dish(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID = UUID.randomUUID(),
 
     @ManyToOne(fetch = FetchType.LAZY)

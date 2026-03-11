@@ -9,7 +9,6 @@ import java.util.UUID
 @Table(name = "subscription")
 class Subscription(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID = UUID.randomUUID(),
 
     @Column(name = "restaurant_id", nullable = false, unique = true)

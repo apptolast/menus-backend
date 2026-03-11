@@ -8,7 +8,6 @@ import java.util.UUID
 @Table(name = "consent_record")
 class ConsentRecord(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID = UUID.randomUUID(),
 
     @Column(name = "profile_uuid", nullable = false)
