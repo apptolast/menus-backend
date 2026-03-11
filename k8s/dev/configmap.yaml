@@ -4,7 +4,7 @@ metadata:
   name: menus-backend-config
   namespace: apptolast-menus-dev
 data:
-  SPRING_PROFILES_ACTIVE: "prod"
+  SPRING_PROFILES_ACTIVE: "dev"
   SERVER_PORT: "8080"
   SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
   SPRING_FLYWAY_ENABLED: "true"

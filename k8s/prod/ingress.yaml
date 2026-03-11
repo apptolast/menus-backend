@@ -12,6 +12,9 @@ spec:
   routes:
     - match: Host(`menus-api.apptolast.com`)
       kind: Rule
+      middlewares:
+        - name: menus-ratelimit
+        - name: menus-security-headers
       services:
         - name: menus-backend
           port: 80

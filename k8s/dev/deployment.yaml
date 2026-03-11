@@ -6,27 +6,25 @@ metadata:
   labels:
     app: menus-backend
     app.kubernetes.io/name: menus-backend
-    app.kubernetes.io/version: "1.0.0"
+    environment: dev
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: menus-backend
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 0
+      maxUnavailable: 1
       maxSurge: 1
   template:
     metadata:
       labels:
         app: menus-backend
     spec:
-      imagePullSecrets:
-        - name: ghcr-secret
       containers:
         - name: menus-backend
-          image: ghcr.io/apptolast/menus-backend:1.0.0
+          image: apptolast/menus-backend:develop
           ports:
             - containerPort: 8080
           envFrom:
@@ -34,6 +32,23 @@ spec:
                 name: menus-backend-config
             - secretRef:
                 name: menus-backend-secret
+          env:
+            - name: REDIS_HOST
+              value: redis
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: menus-backend-secret
+                  key: REDIS_PASSWORD
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 20
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness

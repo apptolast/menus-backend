@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apptolast-menus-prod
+  labels:
+    app.kubernetes.io/name: menus-backend
+    app.kubernetes.io/managed-by: rancher
+    environment: prod

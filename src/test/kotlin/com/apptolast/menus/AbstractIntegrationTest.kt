@@ -39,6 +39,9 @@ abstract class AbstractIntegrationTest {
             registry.add("app.jwt.secret") { "test-secret-key-minimum-64-bytes-long-for-HS512-algorithm-testing!!" }
             registry.add("app.encryption.key") { "test-aes-256-key-exactly-32-byte" }
             registry.add("app.cors.allowed-origins") { "http://localhost:3000" }
+            registry.add("spring.data.redis.repositories.enabled") { "false" }
+            registry.add("management.health.redis.enabled") { "false" }
+            registry.add("spring.autoconfigure.exclude") { "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration" }
         }
     }
 }
