@@ -1,6 +1,8 @@
 package com.apptolast.menus.ingredient.model.entity
 
 import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -22,9 +24,11 @@ class Ingredient(
     @Column(name = "supplier", length = 255)
     var supplier: String? = null,
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "allergens", columnDefinition = "jsonb", nullable = false)
     var allergens: String = "[]",
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "traces", columnDefinition = "jsonb")
     var traces: String? = "[]",
 
