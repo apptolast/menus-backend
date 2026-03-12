@@ -6,6 +6,7 @@ import com.apptolast.menus.consumer.repository.ConsentRecordRepository
 import com.apptolast.menus.consumer.repository.OAuthAccountRepository
 import com.apptolast.menus.consumer.repository.UserAccountRepository
 import com.apptolast.menus.consumer.repository.UserAllergenProfileRepository
+import com.apptolast.menus.gdpr.dto.request.RectificationRequest
 import com.apptolast.menus.gdpr.dto.response.AllergenProfileExport
 import com.apptolast.menus.gdpr.dto.response.DataExportResponse
 import com.apptolast.menus.gdpr.service.GdprService
@@ -60,5 +61,35 @@ class GdprServiceImpl(
             createdAt = user.createdAt
         )
         userAccountRepository.save(anonymized)
+    }
+
+    override fun rectifyUserData(userId: UUID, request: RectificationRequest) {
+        val user = userAccountRepository.findById(userId)
+            .orElseThrow { ResourceNotFoundException("USER_NOT_FOUND", "User not found") }
+
+        val updatedEmail = if (request.email != null) {
+            encryptionConfig.encryptEmail(request.email)
+        } else {
+            user.email
+        }
+
+        val updatedEmailHash = if (request.email != null) {
+            encryptionConfig.hashEmail(request.email)
+        } else {
+            user.emailHash
+        }
+
+        val rectified = UserAccount(
+            id = user.id,
+            email = updatedEmail,
+            emailHash = updatedEmailHash,
+            passwordHash = user.passwordHash,
+            profileUuid = user.profileUuid,
+            role = user.role,
+            isActive = user.isActive,
+            createdAt = user.createdAt
+        )
+        rectified.updatedAt = OffsetDateTime.now()
+        userAccountRepository.save(rectified)
     }
 }
