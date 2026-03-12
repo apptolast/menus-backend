@@ -7,4 +7,5 @@ import java.util.UUID
 interface UserAllergenProfileService {
     fun getProfile(profileUuid: UUID): AllergenProfileResponse
     fun upsertProfile(profileUuid: UUID, request: AllergenProfileRequest): AllergenProfileResponse
+    fun deleteProfile(profileUuid: UUID)
 }

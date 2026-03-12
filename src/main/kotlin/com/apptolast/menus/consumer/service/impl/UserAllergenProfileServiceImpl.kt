@@ -42,6 +42,10 @@ class UserAllergenProfileServiceImpl(
         return userAllergenProfileRepository.save(profile).toResponse()
     }
 
+    override fun deleteProfile(profileUuid: UUID) {
+        userAllergenProfileRepository.deleteByProfileUuid(profileUuid)
+    }
+
     private fun UserAllergenProfile.toResponse() = AllergenProfileResponse(
         profileUuid = profileUuid,
         allergenCodes = allergenCodes,
