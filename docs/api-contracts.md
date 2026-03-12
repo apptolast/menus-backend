@@ -1105,3 +1105,491 @@ Rectifica datos personales incorrectos (derecho de rectificación RGPD Art. 16).
 | **GDPR** | GET | `/users/me/data-export` | JWT | CONSUMER |
 | | DELETE | `/users/me/data-delete` | JWT | CONSUMER |
 | | PUT | `/users/me/data-rectification` | JWT | CONSUMER |
+
+---
+
+## Modulo: Admin — Ingredients (`/api/v1/admin/ingredients`)
+
+> Added in R2 (2026-03-11). Tenant-scoped ingredient catalog with JSONB allergens.
+
+All endpoints require JWT with role `RESTAURANT_OWNER`. Tenant isolation via RLS.
+
+### GET /api/v1/admin/ingredients
+
+List all ingredients for the authenticated restaurant's tenant.
+
+**Authentication**: JWT -- RESTAURANT_OWNER
+
+**Query Parameters**:
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `name` | string | No | Filter by name (contains, case-insensitive) |
+| `page` | integer | No | Page number. Default: 0 |
+| `size` | integer | No | Page size. Default: 20, max: 100 |
+
+**Response 200 OK**:
+```json
+{
+  "content": [
+    {
+      "id": "uuid",
+      "name": "Harina de trigo",
+      "brand": "Harimsa",
+      "supplier": "Distribuidora Madrid",
+      "allergens": [
+        { "code": "GLUTEN", "level": "CONTAINS" }
+      ],
+      "traces": [
+        { "code": "SOYBEANS", "source": "shared equipment" }
+      ],
+      "notes": null,
+      "createdAt": "2026-03-10T10:30:00Z",
+      "updatedAt": "2026-03-10T10:30:00Z"
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 1,
+  "totalPages": 1,
+  "last": true
+}
+```
+
+---
+
+### POST /api/v1/admin/ingredients
+
+Create a new ingredient in the restaurant's tenant.
+
+**Authentication**: JWT -- RESTAURANT_OWNER
+
+**Request**:
+```json
+{
+  "name": "Harina de trigo",
+  "brand": "Harimsa",
+  "supplier": "Distribuidora Madrid",
+  "allergens": [
+    { "code": "GLUTEN", "level": "CONTAINS" }
+  ],
+  "traces": [
+    { "code": "SOYBEANS", "source": "shared equipment" }
+  ],
+  "ocrRawText": "Ingredients: wheat flour. May contain traces of soy.",
+  "notes": "Paquete de 1kg"
+}
+```
+
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| `name` | string | Yes | Non-empty, max 255 chars |
+| `brand` | string | No | Max 255 chars |
+| `supplier` | string | No | Max 255 chars |
+| `allergens` | array | No | Each entry: `code` (valid AllergenCode), `level` (CONTAINS/MAY_CONTAIN/FREE_OF) |
+| `traces` | array | No | Each entry: `code` (valid AllergenCode), `source` (string, optional) |
+| `ocrRawText` | string | No | Raw text from label OCR scanning |
+| `notes` | string | No | Free text |
+
+**Response 201 Created**: Same schema as GET list item
+
+**Errors**:
+- `400 VALIDATION_ERROR`: Invalid allergen code or level
+- `409 CONFLICT`: Ingredient with same name already exists in this tenant
+
+---
+
+### PUT /api/v1/admin/ingredients/{id}
+
+Update an existing ingredient.
+
+**Authentication**: JWT -- RESTAURANT_OWNER
+
+**Path Parameters**: `id` (UUID)
+
+**Request**: Same schema as POST (all fields optional for partial update)
+
+**Response 200 OK**: Full ingredient object
+
+**Errors**:
+- `404 RESOURCE_NOT_FOUND`: Ingredient not found in this tenant
+
+---
+
+### DELETE /api/v1/admin/ingredients/{id}
+
+Delete an ingredient. Fails if referenced by active recipes.
+
+**Authentication**: JWT -- RESTAURANT_OWNER
+
+**Path Parameters**: `id` (UUID)
+
+**Response 204 No Content**
+
+**Errors**:
+- `404 RESOURCE_NOT_FOUND`: Ingredient not found
+- `409 CONFLICT`: Ingredient is referenced by active recipes
+
+---
+
+### POST /api/v1/admin/ingredients/analyze-text
+
+Analyze raw text (from label OCR or manual input) to detect potential allergens.
+
+**Authentication**: JWT -- RESTAURANT_OWNER
+
+**Request**:
+```json
+{
+  "text": "Ingredientes: harina de trigo, leche entera, huevos, mantequilla. Puede contener trazas de frutos de cascara."
+}
+```
+
+**Response 200 OK**:
+```json
+{
+  "detectedAllergens": [
+    { "code": "GLUTEN", "level": "CONTAINS", "matchedKeyword": "harina de trigo" },
+    { "code": "MILK", "level": "CONTAINS", "matchedKeyword": "leche" },
+    { "code": "EGGS", "level": "CONTAINS", "matchedKeyword": "huevos" },
+    { "code": "MILK", "level": "CONTAINS", "matchedKeyword": "mantequilla" },
+    { "code": "NUTS", "level": "MAY_CONTAIN", "matchedKeyword": "trazas de frutos de cascara" }
+  ],
+  "rawText": "Ingredientes: harina de trigo..."
+}
+```
+
+---
+
+## Modulo: Admin -- Recipes (`/api/v1/admin/recipes`)
+
+> Added in R2 (2026-03-11). Recipe management with sub-elaboration support and recursive allergen computation.
+
+All endpoints require JWT with role `RESTAURANT_OWNER`. Tenant isolation via RLS.
+
+### GET /api/v1/admin/recipes
+
+List all recipes for the authenticated restaurant.
+
+**Authentication**: JWT -- RESTAURANT_OWNER
+
+**Query Parameters**:
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `includeSubElaborations` | boolean | No | Include sub-elaborations. Default: true |
+| `category` | string | No | Filter by category |
+| `page` | integer | No | Default: 0 |
+| `size` | integer | No | Default: 20 |
+
+**Response 200 OK**:
+```json
+{
+  "content": [
+    {
+      "id": "uuid",
+      "name": "Paella Valenciana",
+      "description": "Arroz con gambas, mejillones y azafran",
+      "category": "Arroces",
+      "isSubElaboration": false,
+      "price": 18.00,
+      "imageUrl": null,
+      "isActive": true,
+      "ingredientCount": 8,
+      "computedAllergens": [
+        { "code": "CRUSTACEANS", "level": "CONTAINS" },
+        { "code": "MOLLUSCS", "level": "CONTAINS" },
+        { "code": "GLUTEN", "level": "MAY_CONTAIN" }
+      ],
+      "createdAt": "2026-03-10T10:30:00Z"
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 1,
+  "totalPages": 1
+}
+```
+
+---
+
+### GET /api/v1/admin/recipes/{id}
+
+Get recipe details with full ingredient list and computed allergens (recursive through sub-recipes).
+
+**Authentication**: JWT -- RESTAURANT_OWNER
+
+**Path Parameters**: `id` (UUID)
+
+**Response 200 OK**:
+```json
+{
+  "id": "uuid",
+  "name": "Paella Valenciana",
+  "description": "...",
+  "category": "Arroces",
+  "isSubElaboration": false,
+  "price": 18.00,
+  "imageUrl": null,
+  "isActive": true,
+  "ingredients": [
+    {
+      "id": "uuid",
+      "type": "INGREDIENT",
+      "ingredientId": "uuid",
+      "ingredientName": "Gambas",
+      "subRecipeId": null,
+      "subRecipeName": null,
+      "quantity": 0.5,
+      "unit": "kg",
+      "notes": null,
+      "sortOrder": 1
+    },
+    {
+      "id": "uuid",
+      "type": "SUB_RECIPE",
+      "ingredientId": null,
+      "ingredientName": null,
+      "subRecipeId": "uuid",
+      "subRecipeName": "Sofrito base",
+      "quantity": 0.2,
+      "unit": "kg",
+      "notes": "Usar el sofrito del dia",
+      "sortOrder": 2
+    }
+  ],
+  "computedAllergens": [
+    { "code": "CRUSTACEANS", "level": "CONTAINS", "sources": ["Gambas"] },
+    { "code": "MOLLUSCS", "level": "CONTAINS", "sources": ["Mejillones"] },
+    { "code": "GLUTEN", "level": "MAY_CONTAIN", "sources": ["Sofrito base > Pan rallado"] }
+  ],
+  "createdAt": "2026-03-10T10:30:00Z",
+  "updatedAt": "2026-03-10T10:30:00Z"
+}
+```
+
+**Errors**:
+- `404 RESOURCE_NOT_FOUND`: Recipe not found in this tenant
+- `422 CYCLIC_RECIPE_DETECTED`: Sub-recipe chain contains a cycle
+- `422 MAX_RECIPE_DEPTH_EXCEEDED`: Sub-recipe nesting exceeds maximum depth (10)
+
+---
+
+### POST /api/v1/admin/recipes
+
+Create a new recipe.
+
+**Authentication**: JWT -- RESTAURANT_OWNER
+
+**Request**:
+```json
+{
+  "name": "Paella Valenciana",
+  "description": "Arroz con gambas, mejillones y azafran",
+  "category": "Arroces",
+  "isSubElaboration": false,
+  "price": 18.00,
+  "imageUrl": null,
+  "ingredients": [
+    {
+      "ingredientId": "uuid",
+      "quantity": 0.5,
+      "unit": "kg",
+      "sortOrder": 1
+    },
+    {
+      "subRecipeId": "uuid",
+      "quantity": 0.2,
+      "unit": "kg",
+      "notes": "Sofrito del dia",
+      "sortOrder": 2
+    }
+  ]
+}
+```
+
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| `name` | string | Yes | Non-empty, max 255 chars |
+| `description` | string | No | Max 2000 chars |
+| `category` | string | No | Max 100 chars |
+| `isSubElaboration` | boolean | No | Default: false |
+| `price` | decimal | No | >= 0 |
+| `ingredients` | array | No | Each entry must have EITHER `ingredientId` OR `subRecipeId` (not both) |
+| `ingredients[].ingredientId` | UUID | Conditional | Must exist in tenant's ingredients |
+| `ingredients[].subRecipeId` | UUID | Conditional | Must exist in tenant's recipes |
+| `ingredients[].quantity` | decimal | No | >= 0 |
+| `ingredients[].unit` | string | No | Max 30 chars |
+| `ingredients[].sortOrder` | integer | No | Default: 0 |
+
+**Response 201 Created**: Full recipe object (same as GET /{id})
+
+**Errors**:
+- `400 VALIDATION_ERROR`: Both ingredientId and subRecipeId provided, or neither
+- `404 RESOURCE_NOT_FOUND`: Referenced ingredient or sub-recipe not found
+- `422 CYCLIC_RECIPE_DETECTED`: Adding this sub-recipe would create a cycle
+
+---
+
+### PUT /api/v1/admin/recipes/{id}
+
+Update a recipe.
+
+**Authentication**: JWT -- RESTAURANT_OWNER
+
+**Path Parameters**: `id` (UUID)
+
+**Request**: Same schema as POST (all fields optional)
+
+**Response 200 OK**: Full recipe object
+
+---
+
+### DELETE /api/v1/admin/recipes/{id}
+
+Delete a recipe. Soft-delete (isActive = false) if referenced by dishes.
+
+**Authentication**: JWT -- RESTAURANT_OWNER
+
+**Path Parameters**: `id` (UUID)
+
+**Response 204 No Content**
+
+**Errors**:
+- `404 RESOURCE_NOT_FOUND`: Recipe not found
+
+---
+
+## Modulo: Admin -- Digital Cards (`/api/v1/admin/digital-cards`)
+
+> Added in R2 (2026-03-11). Digital menu card management with custom slugs and QR codes.
+
+### POST /api/v1/admin/digital-cards
+
+Create a digital card for a menu.
+
+**Authentication**: JWT -- RESTAURANT_OWNER
+
+**Request**:
+```json
+{
+  "menuId": "uuid",
+  "slug": "cobre-y-picon-primavera",
+  "customCss": {
+    "primaryColor": "#2c3e50",
+    "fontFamily": "Roboto",
+    "logoPosition": "top-center"
+  }
+}
+```
+
+**Response 201 Created**:
+```json
+{
+  "id": "uuid",
+  "menuId": "uuid",
+  "slug": "cobre-y-picon-primavera",
+  "qrCodeUrl": "https://cdn.apptolast.com/qr/cobre-y-picon-primavera.png",
+  "publicUrl": "https://carta.apptolast.com/cobre-y-picon-primavera",
+  "isActive": true,
+  "customCss": { ... },
+  "createdAt": "2026-03-10T10:30:00Z"
+}
+```
+
+**Errors**:
+- `409 CONFLICT`: Slug already taken
+- `404 RESOURCE_NOT_FOUND`: Menu not found in tenant
+
+---
+
+### GET /api/v1/admin/digital-cards
+
+List all digital cards for the restaurant.
+
+**Authentication**: JWT -- RESTAURANT_OWNER
+
+**Response 200 OK**: Array of digital card objects
+
+---
+
+### PUT /api/v1/admin/digital-cards/{id}
+
+Update a digital card (slug, CSS, active status).
+
+**Authentication**: JWT -- RESTAURANT_OWNER
+
+---
+
+### DELETE /api/v1/admin/digital-cards/{id}
+
+Deactivate a digital card.
+
+**Authentication**: JWT -- RESTAURANT_OWNER
+
+**Response 204 No Content**
+
+---
+
+## Modulo: Public -- Digital Card (`/carta/{slug}`)
+
+### GET /api/v1/carta/{slug}
+
+Public endpoint to view a restaurant's digital menu card.
+
+**Authentication**: Public (optional JWT for allergen filtering)
+
+**Path Parameters**: `slug` (string)
+
+**Response 200 OK**:
+```json
+{
+  "restaurantName": "Cobre y Picon",
+  "restaurantLogo": "https://...",
+  "menuName": "Menu de Primavera",
+  "customCss": { ... },
+  "sections": [
+    {
+      "name": "Entrantes",
+      "recipes": [
+        {
+          "name": "Ensalada Cesar",
+          "description": "...",
+          "price": 8.50,
+          "imageUrl": null,
+          "allergens": [
+            { "code": "GLUTEN", "level": "CONTAINS" },
+            { "code": "EGGS", "level": "MAY_CONTAIN" }
+          ],
+          "safetyLevel": "DANGER"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Errors**:
+- `404 RESOURCE_NOT_FOUND`: Slug not found or digital card is inactive
+
+---
+
+## Updated Endpoint Summary (R2)
+
+| Module | Method | Path | Auth | Role |
+|---|---|---|---|---|
+| **Ingredients** | GET | `/admin/ingredients` | JWT | RESTAURANT_OWNER |
+| | POST | `/admin/ingredients` | JWT | RESTAURANT_OWNER |
+| | PUT | `/admin/ingredients/{id}` | JWT | RESTAURANT_OWNER |
+| | DELETE | `/admin/ingredients/{id}` | JWT | RESTAURANT_OWNER |
+| | POST | `/admin/ingredients/analyze-text` | JWT | RESTAURANT_OWNER |
+| **Recipes** | GET | `/admin/recipes` | JWT | RESTAURANT_OWNER |
+| | GET | `/admin/recipes/{id}` | JWT | RESTAURANT_OWNER |
+| | POST | `/admin/recipes` | JWT | RESTAURANT_OWNER |
+| | PUT | `/admin/recipes/{id}` | JWT | RESTAURANT_OWNER |
+| | DELETE | `/admin/recipes/{id}` | JWT | RESTAURANT_OWNER |
+| **Digital Cards** | GET | `/admin/digital-cards` | JWT | RESTAURANT_OWNER |
+| | POST | `/admin/digital-cards` | JWT | RESTAURANT_OWNER |
+| | PUT | `/admin/digital-cards/{id}` | JWT | RESTAURANT_OWNER |
+| | DELETE | `/admin/digital-cards/{id}` | JWT | RESTAURANT_OWNER |
+| **Public Card** | GET | `/carta/{slug}` | Public (opt JWT) | -- |

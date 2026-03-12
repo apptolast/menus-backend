@@ -1,6 +1,7 @@
 package com.apptolast.menus.dish.model.entity
 
 import com.apptolast.menus.menu.model.entity.MenuSection
+import com.apptolast.menus.recipe.model.entity.Recipe
 import jakarta.persistence.*
 import java.math.BigDecimal
 import java.time.OffsetDateTime
@@ -30,6 +31,10 @@ class Dish(
 
     @Column(name = "image_url", length = 500)
     var imageUrl: String? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recipe_id")
+    var recipe: Recipe? = null,
 
     @Column(name = "is_available", nullable = false)
     var isAvailable: Boolean = true,

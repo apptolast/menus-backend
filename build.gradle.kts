@@ -58,6 +58,13 @@ dependencies {
     // springdoc-openapi 3.0.2 targets Spring Boot 4.0.3 — compatible
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
 
+    // PDF generation (OpenPDF — LibrePDF fork of iText)
+    implementation("com.github.librepdf:openpdf:2.0.3")
+
+    // QR code generation (ZXing)
+    implementation("com.google.zxing:core:3.5.3")
+    implementation("com.google.zxing:javase:3.5.3")
+
     // Dev tools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")
