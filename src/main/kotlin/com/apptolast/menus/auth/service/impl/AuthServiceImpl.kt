@@ -190,7 +190,7 @@ class AuthServiceImpl(
                 user.id, user.role.name, user.profileUuid, tenantId
             ),
             refreshToken = jwtTokenProvider.generateRefreshToken(user.id),
-            expiresIn = 900
+            expiresIn = 900000
         )
 
     private fun createRestaurantForUser(ownerId: UUID, name: String, slug: String?): Restaurant {

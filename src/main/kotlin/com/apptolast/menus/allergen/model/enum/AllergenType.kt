@@ -36,8 +36,8 @@ enum class AllergenType(
         emoji = "\uD83E\uDD5C",
         keywords = listOf("peanuts", "cacahuetes", "peanut", "cacahuete", "groundnut", "mani")
     ),
-    SOYBEANS(
-        displayName = "Soybeans",
+    SOYA(
+        displayName = "Soy",
         abbreviation = "SOY",
         emoji = "\uD83E\uDED8",
         keywords = listOf("soybeans", "soja", "soy", "soya", "tofu", "edamame", "tempeh", "miso")
@@ -48,8 +48,8 @@ enum class AllergenType(
         emoji = "\uD83E\uDD5B",
         keywords = listOf("milk", "leche", "dairy", "lacteo", "lactosa", "lactose", "cheese", "queso", "butter", "mantequilla", "cream", "nata", "yogurt")
     ),
-    NUTS(
-        displayName = "Nuts",
+    TREE_NUTS(
+        displayName = "Tree Nuts",
         abbreviation = "NUT",
         emoji = "\uD83C\uDF30",
         keywords = listOf("nuts", "frutos de cascara", "almond", "almendra", "hazelnut", "avellana", "walnut", "nuez", "cashew", "anacardo", "pecan", "pistachio", "pistacho", "macadamia")

@@ -65,11 +65,11 @@ class RestaurantServiceImpl(
         id = id,
         name = name,
         slug = slug,
-        description = description,
-        address = address,
-        phone = phone,
+        description = description ?: "",
+        address = address ?: "",
+        phone = phone ?: "",
         logoUrl = logoUrl,
-        isActive = isActive,
+        active = isActive,
         createdAt = createdAt
     )
 }

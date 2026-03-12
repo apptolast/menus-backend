@@ -3,10 +3,8 @@ package com.apptolast.menus.ingredient.mapper
 import com.apptolast.menus.ingredient.dto.request.CreateIngredientRequest
 import com.apptolast.menus.ingredient.dto.request.UpdateIngredientRequest
 import com.apptolast.menus.ingredient.dto.response.AnalyzeTextResponse
-import com.apptolast.menus.ingredient.dto.response.DetectedAllergenResponse
 import com.apptolast.menus.ingredient.dto.response.IngredientResponse
 import com.apptolast.menus.ingredient.model.entity.Ingredient
-import com.apptolast.menus.ingredient.service.DetectedAllergen
 import com.apptolast.menus.ingredient.service.TextAnalysisResult
 import tools.jackson.core.type.TypeReference
 import tools.jackson.databind.ObjectMapper
@@ -59,16 +57,18 @@ fun UpdateIngredientRequest.applyTo(
     return existing
 }
 
-fun TextAnalysisResult.toResponse(): AnalyzeTextResponse = AnalyzeTextResponse(
-    detectedAllergens = detectedAllergens.map { it.toResponse() },
-    rawText = rawText
-)
-
-fun DetectedAllergen.toResponse(): DetectedAllergenResponse = DetectedAllergenResponse(
-    code = code,
-    level = level,
-    matchedKeyword = matchedKeyword
-)
+fun TextAnalysisResult.toResponse(): AnalyzeTextResponse {
+    val allergens = detectedAllergens
+        .filter { it.level == "CONTAINS" }
+        .map { it.code }
+    val traces = detectedAllergens
+        .filter { it.level == "MAY_CONTAIN" }
+        .map { it.code }
+    return AnalyzeTextResponse(
+        allergens = allergens,
+        traces = traces
+    )
+}
 
 private fun parseJsonStringList(json: String, objectMapper: ObjectMapper): List<String> =
     try {

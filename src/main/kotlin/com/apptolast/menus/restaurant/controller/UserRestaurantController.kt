@@ -50,11 +50,11 @@ class UserRestaurantController(
             id = result.restaurant.id,
             name = result.restaurant.name,
             slug = result.restaurant.slug,
-            description = result.restaurant.description,
-            address = result.restaurant.address,
-            phone = result.restaurant.phone,
+            description = result.restaurant.description ?: "",
+            address = result.restaurant.address ?: "",
+            phone = result.restaurant.phone ?: "",
             logoUrl = result.restaurant.logoUrl,
-            isActive = result.restaurant.isActive,
+            active = result.restaurant.isActive,
             createdAt = result.restaurant.createdAt
         )
         val authResponse = AuthResponse(

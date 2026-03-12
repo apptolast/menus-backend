@@ -290,8 +290,8 @@ class MenuServiceImpl(
     private fun Menu.toResponse() = MenuResponse(
         id = id,
         name = name,
-        description = description,
-        isArchived = isArchived,
+        description = description ?: "",
+        archived = isArchived,
         displayOrder = displayOrder,
         sections = sections.map { it.toResponse() },
         updatedAt = updatedAt

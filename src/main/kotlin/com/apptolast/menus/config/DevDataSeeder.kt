@@ -365,7 +365,7 @@ class DevDataSeeder(
         )
         saveDishAllergens(burrataDish, tenantId, allergensByCode, mapOf(
             "MILK" to ContainmentLevel.CONTAINS,
-            "NUTS" to ContainmentLevel.CONTAINS,
+            "TREE_NUTS" to ContainmentLevel.CONTAINS,
             "PEANUTS" to ContainmentLevel.MAY_CONTAIN
         ))
 
@@ -431,7 +431,7 @@ class DevDataSeeder(
             IngredientSeed("Anchoas en aceite", "Conservas Ortiz",
                 """[{"code":"FISH","level":"CONTAINS"}]"""),
             IngredientSeed("Salsa de soja", "Kikkoman",
-                """[{"code":"SOYBEANS","level":"CONTAINS"}]"""),
+                """[{"code":"SOYA","level":"CONTAINS"}]"""),
             IngredientSeed("Patata", null, "[]"),
             IngredientSeed("Cebollino", null, "[]"),
             IngredientSeed("Butifarra", null, "[]"),
@@ -446,7 +446,7 @@ class DevDataSeeder(
             IngredientSeed("Parmesano", null,
                 """[{"code":"MILK","level":"CONTAINS"}]"""),
             IngredientSeed("Nueces", null,
-                """[{"code":"NUTS","level":"CONTAINS"}]""")
+                """[{"code":"TREE_NUTS","level":"CONTAINS"}]""")
         )
 
         return seeds.associate { seed ->

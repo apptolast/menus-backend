@@ -7,8 +7,8 @@ import com.apptolast.menus.recipe.service.ComputedAllergen
 import com.apptolast.menus.recipe.service.RecipeAllergenCalculator
 import com.apptolast.menus.shared.exception.CyclicRecipeException
 import com.apptolast.menus.shared.exception.MaxDepthExceededException
+import tools.jackson.core.type.TypeReference
 import tools.jackson.databind.ObjectMapper
-import tools.jackson.module.kotlin.readValue
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.UUID
@@ -155,7 +155,7 @@ class RecipeAllergenCalculatorImpl(
             return emptyList()
         }
         return try {
-            val items: List<AllergenJsonEntry> = objectMapper.readValue(allergensJson)
+            val items: List<AllergenJsonEntry> = objectMapper.readValue(allergensJson, object : TypeReference<List<AllergenJsonEntry>>() {})
             items.map { entry ->
                 ParsedAllergen(
                     code = entry.code,
@@ -170,14 +170,14 @@ class RecipeAllergenCalculatorImpl(
 
     /**
      * Parses the traces JSONB field.
-     * Expected format: [{"code":"SOYBEANS","source":"shared equipment"}, ...]
+     * Expected format: [{"code":"SOYA","source":"shared equipment"}, ...]
      */
     private fun parseTraces(tracesJson: String): List<ParsedAllergen> {
         if (tracesJson.isBlank() || tracesJson == "[]") {
             return emptyList()
         }
         return try {
-            val items: List<TraceJsonEntry> = objectMapper.readValue(tracesJson)
+            val items: List<TraceJsonEntry> = objectMapper.readValue(tracesJson, object : TypeReference<List<TraceJsonEntry>>() {})
             items.map { entry ->
                 ParsedAllergen(
                     code = entry.code,

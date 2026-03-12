@@ -169,10 +169,11 @@ class DishServiceImpl(
         return DishResponse(
             id = id,
             name = name,
-            description = description,
+            description = description ?: "",
             price = price,
+            sectionId = section.id,
             imageUrl = imageUrl,
-            isAvailable = isAvailable,
+            available = isAvailable,
             safetyLevel = safetyLevel,
             matchedAllergens = matchedAllergens,
             allergens = allergens.map { da ->

@@ -4,5 +4,5 @@ data class AuthResponse(
     val accessToken: String,
     val refreshToken: String,
     val tokenType: String = "Bearer",
-    val expiresIn: Long = 900
+    val expiresIn: Long = 900000
 )

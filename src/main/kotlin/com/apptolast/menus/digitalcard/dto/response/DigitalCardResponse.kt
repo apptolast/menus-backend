@@ -9,7 +9,7 @@ data class DigitalCardResponse(
     val slug: String,
     val publicUrl: String,
     val qrCodeUrl: String?,
-    val isActive: Boolean,
+    val active: Boolean,
     val customCss: String?,
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime

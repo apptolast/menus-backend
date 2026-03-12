@@ -8,10 +8,11 @@ import java.util.UUID
 data class DishResponse(
     val id: UUID,
     val name: String,
-    val description: String?,
+    val description: String = "",
     val price: BigDecimal?,
+    val sectionId: UUID? = null,
     val imageUrl: String?,
-    val isAvailable: Boolean,
+    val available: Boolean,
     val safetyLevel: SafetyLevel?,
     val matchedAllergens: List<String>,
     val allergens: List<DishAllergenResponse>,

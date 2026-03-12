@@ -20,7 +20,7 @@ fun DigitalCard.toResponse(): DigitalCardResponse = DigitalCardResponse(
     slug = slug,
     publicUrl = "/api/v1/public/cards/$slug",
     qrCodeUrl = qrCodeUrl,
-    isActive = isActive,
+    active = isActive,
     customCss = customCss,
     createdAt = createdAt,
     updatedAt = updatedAt
@@ -63,7 +63,7 @@ fun Dish.toPublicDishResponse(): PublicDishResponse {
     return PublicDishResponse(
         id = id,
         name = name,
-        description = description,
+        description = description ?: "",
         price = price,
         allergens = allergenCodes,
         traces = traceCodes
