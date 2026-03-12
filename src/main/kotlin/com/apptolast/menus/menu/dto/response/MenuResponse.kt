@@ -7,6 +7,7 @@ data class MenuResponse(
     val id: UUID,
     val name: String,
     val description: String = "",
+    val published: Boolean,
     val archived: Boolean,
     val displayOrder: Int,
     val sections: List<SectionResponse> = emptyList(),
