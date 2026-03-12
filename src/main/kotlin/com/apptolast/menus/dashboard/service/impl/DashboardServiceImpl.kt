@@ -8,8 +8,8 @@ import com.apptolast.menus.digitalcard.repository.DigitalCardRepository
 import com.apptolast.menus.ingredient.repository.IngredientRepository
 import com.apptolast.menus.menu.repository.MenuRepository
 import com.apptolast.menus.recipe.repository.RecipeRepository
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+import tools.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.readValue
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

@@ -8,8 +8,8 @@ import com.apptolast.menus.ingredient.dto.response.IngredientResponse
 import com.apptolast.menus.ingredient.model.entity.Ingredient
 import com.apptolast.menus.ingredient.service.DetectedAllergen
 import com.apptolast.menus.ingredient.service.TextAnalysisResult
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.ObjectMapper
 import java.util.UUID
 
 fun Ingredient.toResponse(objectMapper: ObjectMapper): IngredientResponse {

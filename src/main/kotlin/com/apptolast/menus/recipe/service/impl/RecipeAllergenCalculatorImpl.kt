@@ -7,8 +7,8 @@ import com.apptolast.menus.recipe.service.ComputedAllergen
 import com.apptolast.menus.recipe.service.RecipeAllergenCalculator
 import com.apptolast.menus.shared.exception.CyclicRecipeException
 import com.apptolast.menus.shared.exception.MaxDepthExceededException
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.module.kotlin.readValue
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.UUID

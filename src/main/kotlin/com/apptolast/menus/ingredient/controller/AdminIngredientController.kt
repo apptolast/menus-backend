@@ -12,7 +12,7 @@ import com.apptolast.menus.ingredient.service.IngredientService
 import com.apptolast.menus.ingredient.service.TextAnalyzerService
 import com.apptolast.menus.restaurant.service.RestaurantService
 import com.apptolast.menus.shared.security.UserPrincipal
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.ObjectMapper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
