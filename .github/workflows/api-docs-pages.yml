@@ -41,7 +41,7 @@ jobs:
           POSTGRES_USER: menus_docs
           POSTGRES_PASSWORD: menus_docs
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U menus_docs -d menusdb_docs"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -72,7 +72,9 @@ jobs:
 
       - name: Start application in background
         run: |
-          ./gradlew bootRun --no-daemon &
+          JAR=$(ls build/libs/*.jar | grep -v plain | head -1)
+          echo "Starting JAR: $JAR"
+          java -jar "$JAR" > app.log 2>&1 &
           echo $! > app.pid
           echo "App PID: $(cat app.pid)"
         env:
@@ -82,17 +84,22 @@ jobs:
           JWT_SECRET: docs-generation-secret-key-minimum-64-bytes-long-for-hs512-algorithm-placeholder
           ENCRYPTION_KEY: docs-generation-encrypt-32bytes!
           CORS_ORIGINS: http://localhost:3000
+          SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+          SPRING_DATA_REDIS_REPOSITORIES_ENABLED: "false"
+          MANAGEMENT_HEALTH_REDIS_ENABLED: "false"
 
       - name: Wait for application to be ready
         run: |
           echo "Waiting for application to start..."
-          for i in $(seq 1 60); do
+          for i in $(seq 1 90); do
             if curl -sf http://localhost:8080/actuator/health > /dev/null 2>&1; then
               echo "Application is ready (attempt $i)"
               break
             fi
-            if [ $i -eq 60 ]; then
-              echo "ERROR: Application did not start within 120 seconds"
+            if [ $i -eq 90 ]; then
+              echo "ERROR: Application did not start within 180 seconds"
+              echo "--- Last 100 lines of app.log ---"
+              tail -100 app.log
               exit 1
             fi
             sleep 2
@@ -117,6 +124,10 @@ jobs:
           if [ -f app.pid ]; then
             kill "$(cat app.pid)" 2>/dev/null || true
             rm app.pid
+          fi
+          if [ -f app.log ]; then
+            echo "--- Application log (last 50 lines) ---"
+            tail -50 app.log
           fi
 
       - name: Generate static HTML docs with Redocly
