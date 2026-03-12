@@ -15,7 +15,6 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -27,7 +26,6 @@ import java.util.UUID
 @RequestMapping("/api/v1/admin/audit-logs")
 @Tag(name = "Admin - Audit Logs", description = "Allergen change audit trail for the restaurant")
 @SecurityRequirement(name = "Bearer Authentication")
-@PreAuthorize("hasAnyRole('RESTAURANT_OWNER', 'ADMIN')")
 class AuditController(
     private val auditService: AuditService,
     private val restaurantService: RestaurantService

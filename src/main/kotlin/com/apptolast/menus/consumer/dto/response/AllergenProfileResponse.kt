@@ -5,7 +5,7 @@ import java.util.UUID
 
 data class AllergenProfileResponse(
     val profileUuid: UUID,
-    val allergenCodes: List<String>,
-    val severityNotes: String?,
-    val updatedAt: OffsetDateTime
+    val allergenCodes: List<String> = emptyList(),
+    val severityNotes: String = "",
+    val updatedAt: OffsetDateTime? = null
 )

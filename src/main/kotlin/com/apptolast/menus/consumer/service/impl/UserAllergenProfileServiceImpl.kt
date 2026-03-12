@@ -49,7 +49,7 @@ class UserAllergenProfileServiceImpl(
     private fun UserAllergenProfile.toResponse() = AllergenProfileResponse(
         profileUuid = profileUuid,
         allergenCodes = allergenCodes,
-        severityNotes = severityNotes,
+        severityNotes = severityNotes ?: "",
         updatedAt = updatedAt
     )
 }

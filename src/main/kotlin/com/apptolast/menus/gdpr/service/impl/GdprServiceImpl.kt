@@ -37,7 +37,7 @@ class GdprServiceImpl(
             email = decryptedEmail,
             role = user.role.name,
             allergenProfile = profile?.let {
-                AllergenProfileExport(allergenCodes = it.allergenCodes, severityNotes = it.severityNotes)
+                AllergenProfileExport(allergenCodes = it.allergenCodes, severityNotes = it.severityNotes ?: "")
             }
         )
     }

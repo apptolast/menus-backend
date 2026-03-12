@@ -21,7 +21,6 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
@@ -30,7 +29,6 @@ import java.util.UUID
 @RequestMapping("/api/v1/admin/menus")
 @Tag(name = "Admin - Menus", description = "Restaurant menu management")
 @SecurityRequirement(name = "Bearer Authentication")
-@PreAuthorize("hasAnyRole('RESTAURANT_OWNER', 'ADMIN')")
 class AdminMenuController(
     private val menuService: MenuService,
     private val restaurantService: RestaurantService

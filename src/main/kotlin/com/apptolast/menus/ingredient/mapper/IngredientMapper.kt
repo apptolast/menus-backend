@@ -17,8 +17,8 @@ fun Ingredient.toResponse(objectMapper: ObjectMapper): IngredientResponse {
     return IngredientResponse(
         id = id,
         name = name,
-        brand = brand,
-        supplier = supplier,
+        brand = brand ?: "",
+        supplier = supplier ?: "",
         allergens = allergenList,
         traces = traceList,
         ocrRawText = ocrRawText,

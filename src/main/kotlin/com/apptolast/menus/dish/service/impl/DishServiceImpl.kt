@@ -182,7 +182,7 @@ class DishServiceImpl(
                     code = da.allergen.code,
                     name = da.allergen.translations.firstOrNull { t -> t.locale == "es" }?.name ?: da.allergen.code,
                     containmentLevel = da.containmentLevel.name,
-                    notes = da.notes
+                    notes = da.notes ?: ""
                 )
             },
             updatedAt = updatedAt

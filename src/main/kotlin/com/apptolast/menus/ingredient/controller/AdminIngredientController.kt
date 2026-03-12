@@ -21,7 +21,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
@@ -30,7 +29,6 @@ import java.util.UUID
 @RequestMapping("/api/v1/admin/ingredients")
 @Tag(name = "Admin - Ingredients", description = "Ingredient catalog management for restaurant owners")
 @SecurityRequirement(name = "Bearer Authentication")
-@PreAuthorize("hasAnyRole('RESTAURANT_OWNER', 'ADMIN')")
 class AdminIngredientController(
     private val ingredientService: IngredientService,
     private val textAnalyzerService: TextAnalyzerService,

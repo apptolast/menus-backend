@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
@@ -21,7 +20,6 @@ import java.util.UUID
 @RequestMapping("/api/v1/admin/dishes")
 @Tag(name = "Admin - Dishes", description = "Dish and allergen management")
 @SecurityRequirement(name = "Bearer Authentication")
-@PreAuthorize("hasAnyRole('RESTAURANT_OWNER', 'ADMIN')")
 class AdminDishController(
     private val dishService: DishService,
     private val restaurantService: RestaurantService

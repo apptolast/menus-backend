@@ -20,7 +20,7 @@ class AllergenServiceImpl(
             AllergenResponse(
                 id = allergen.id,
                 code = allergen.code,
-                iconUrl = allergen.iconUrl,
+                iconUrl = allergen.iconUrl ?: "",
                 translations = allergen.translations.associate { t -> t.locale to t.name }
             )
         }

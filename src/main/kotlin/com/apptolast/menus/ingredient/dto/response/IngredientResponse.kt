@@ -6,12 +6,12 @@ import java.util.UUID
 data class IngredientResponse(
     val id: UUID,
     val name: String,
-    val brand: String?,
-    val supplier: String?,
-    val allergens: List<String>,
-    val traces: List<String>,
-    val ocrRawText: String?,
-    val notes: String?,
-    val createdAt: OffsetDateTime,
-    val updatedAt: OffsetDateTime
+    val brand: String = "",
+    val supplier: String = "",
+    val allergens: List<String> = emptyList(),
+    val traces: List<String> = emptyList(),
+    val ocrRawText: String? = null,
+    val notes: String? = null,
+    val createdAt: OffsetDateTime? = null,
+    val updatedAt: OffsetDateTime? = null
 )

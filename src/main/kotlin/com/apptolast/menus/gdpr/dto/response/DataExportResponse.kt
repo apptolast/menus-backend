@@ -12,6 +12,6 @@ data class DataExportResponse(
 )
 
 data class AllergenProfileExport(
-    val allergenCodes: List<String>,
-    val severityNotes: String?
+    val allergenCodes: List<String> = emptyList(),
+    val severityNotes: String = ""
 )
