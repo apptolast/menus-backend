@@ -1,6 +1,7 @@
 package com.apptolast.menus.shared.security
 
 import com.apptolast.menus.config.AppConfig
+import com.apptolast.menus.consumer.model.enum.UserRole
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
@@ -20,15 +21,13 @@ class JwtTokenProvider(private val appConfig: AppConfig) {
         Keys.hmacShaKeyFor(bytes)
     }
 
-    fun generateAccessToken(userId: UUID, role: String, profileUuid: UUID? = null, tenantId: UUID? = null): String {
+    fun generateAccessToken(userId: UUID, role: UserRole): String {
         val now = Date()
         val expiry = Date(now.time + appConfig.jwt.accessExpiration * 1000)
         return Jwts.builder()
             .subject(userId.toString())
-            .claim("role", role)
+            .claim("role", role.name)
             .claim("type", "access")
-            .apply { profileUuid?.let { claim("profileUuid", it.toString()) } }
-            .apply { tenantId?.let { claim("tenantId", it.toString()) } }
             .issuedAt(now)
             .expiration(expiry)
             .signWith(signingKey, Jwts.SIG.HS512)
@@ -47,21 +46,14 @@ class JwtTokenProvider(private val appConfig: AppConfig) {
             .compact()
     }
 
-    fun validateToken(token: String): Boolean {
-        return runCatching { getClaims(token) }.isSuccess
-    }
+    fun validateToken(token: String): Boolean =
+        runCatching { getClaims(token) }.isSuccess
 
     fun getUserIdFromToken(token: String): UUID =
         UUID.fromString(getClaims(token).subject)
 
     fun getRoleFromToken(token: String): String =
         getClaims(token)["role"] as? String ?: ""
-
-    fun getProfileUuidFromToken(token: String): UUID? =
-        (getClaims(token)["profileUuid"] as? String)?.let { UUID.fromString(it) }
-
-    fun getTenantIdFromToken(token: String): UUID? =
-        (getClaims(token)["tenantId"] as? String)?.let { UUID.fromString(it) }
 
     fun getTokenType(token: String): String =
         getClaims(token)["type"] as? String ?: ""

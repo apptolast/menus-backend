@@ -2,77 +2,40 @@ package com.apptolast.menus.ingredient.mapper
 
 import com.apptolast.menus.ingredient.dto.request.CreateIngredientRequest
 import com.apptolast.menus.ingredient.dto.request.UpdateIngredientRequest
-import com.apptolast.menus.ingredient.dto.response.AnalyzeTextResponse
+import com.apptolast.menus.ingredient.dto.response.IngredientAllergenResponse
 import com.apptolast.menus.ingredient.dto.response.IngredientResponse
 import com.apptolast.menus.ingredient.model.entity.Ingredient
-import com.apptolast.menus.ingredient.service.TextAnalysisResult
-import tools.jackson.core.type.TypeReference
-import tools.jackson.databind.ObjectMapper
-import java.util.UUID
+import com.apptolast.menus.ingredient.model.entity.IngredientAllergen
 
-fun Ingredient.toResponse(objectMapper: ObjectMapper): IngredientResponse {
-    val allergenList: List<String> = parseJsonStringList(allergens, objectMapper)
-    val traceList: List<String> = parseJsonStringList(traces ?: "[]", objectMapper)
-
-    return IngredientResponse(
-        id = id,
-        name = name,
-        brand = brand ?: "",
-        supplier = supplier ?: "",
-        allergens = allergenList,
-        traces = traceList,
-        ocrRawText = ocrRawText,
-        notes = notes,
-        createdAt = createdAt,
-        updatedAt = updatedAt
-    )
-}
-
-fun CreateIngredientRequest.toEntity(
-    tenantId: UUID,
-    createdBy: UUID?,
-    objectMapper: ObjectMapper
-): Ingredient = Ingredient(
-    tenantId = tenantId,
+fun Ingredient.toResponse(allergens: List<IngredientAllergen> = emptyList()): IngredientResponse = IngredientResponse(
+    id = id,
     name = name,
+    description = description,
     brand = brand,
-    supplier = supplier,
-    allergens = objectMapper.writeValueAsString(allergens),
-    traces = objectMapper.writeValueAsString(traces),
-    ocrRawText = ocrRawText,
-    notes = notes,
-    createdBy = createdBy
+    labelInfo = labelInfo,
+    allergens = allergens.map { it.toAllergenResponse() },
+    createdAt = createdAt,
+    updatedAt = updatedAt
 )
 
-fun UpdateIngredientRequest.applyTo(
-    existing: Ingredient,
-    objectMapper: ObjectMapper
-): Ingredient {
+fun IngredientAllergen.toAllergenResponse(): IngredientAllergenResponse = IngredientAllergenResponse(
+    allergenId = allergen.id,
+    allergenCode = allergen.code,
+    allergenName = allergen.nameEs,
+    containmentLevel = containmentLevel.name
+)
+
+fun CreateIngredientRequest.toEntity(): Ingredient = Ingredient(
+    name = name,
+    description = description,
+    brand = brand,
+    labelInfo = labelInfo
+)
+
+fun UpdateIngredientRequest.applyTo(existing: Ingredient): Ingredient {
     name?.let { existing.name = it }
+    description?.let { existing.description = it }
     brand?.let { existing.brand = it }
-    supplier?.let { existing.supplier = it }
-    allergens?.let { existing.allergens = objectMapper.writeValueAsString(it) }
-    traces?.let { existing.traces = objectMapper.writeValueAsString(it) }
-    notes?.let { existing.notes = it }
+    labelInfo?.let { existing.labelInfo = it }
     return existing
 }
-
-fun TextAnalysisResult.toResponse(): AnalyzeTextResponse {
-    val allergens = detectedAllergens
-        .filter { it.level == "CONTAINS" }
-        .map { it.code }
-    val traces = detectedAllergens
-        .filter { it.level == "MAY_CONTAIN" }
-        .map { it.code }
-    return AnalyzeTextResponse(
-        allergens = allergens,
-        traces = traces
-    )
-}
-
-private fun parseJsonStringList(json: String, objectMapper: ObjectMapper): List<String> =
-    try {
-        objectMapper.readValue(json, object : TypeReference<List<String>>() {})
-    } catch (_: Exception) {
-        emptyList()
-    }

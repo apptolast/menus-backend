@@ -6,8 +6,7 @@ data class RecipeSummaryResponse(
     val id: UUID,
     val name: String,
     val category: String?,
-    val isSubElaboration: Boolean,
-    val isActive: Boolean,
-    val allergenCount: Int,
-    val componentCount: Int
+    val active: Boolean,
+    val ingredientCount: Int,
+    val allergenCount: Int
 )

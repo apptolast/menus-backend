@@ -10,13 +10,18 @@ interface RecipeService {
     fun create(recipe: Recipe, ingredientInputs: List<RecipeIngredientInput>): Recipe
     fun update(id: UUID, recipe: Recipe, ingredientInputs: List<RecipeIngredientInput>?): Recipe
     fun delete(id: UUID)
+    fun computeAllergens(recipeId: UUID): List<ComputedAllergen>
 }
 
 data class RecipeIngredientInput(
-    val ingredientId: UUID? = null,
-    val subRecipeId: UUID? = null,
+    val ingredientId: UUID,
     val quantity: BigDecimal? = null,
-    val unit: String? = null,
-    val notes: String? = null,
-    val sortOrder: Int = 0
+    val unit: String? = null
+)
+
+data class ComputedAllergen(
+    val allergenId: Int,
+    val allergenCode: String,
+    val allergenName: String,
+    val containmentLevel: String
 )

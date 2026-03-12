@@ -6,29 +6,26 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Entity
-@Table(name = "user_account")
+@Table(name = "users")
 class UserAccount(
     @Id
     val id: UUID = UUID.randomUUID(),
 
-    @Column(name = "email", nullable = false, unique = true, columnDefinition = "BYTEA")
-    val email: ByteArray = ByteArray(0),
-
-    @Column(name = "email_hash", nullable = false, unique = true, length = 64)
-    val emailHash: String = "",
+    @Column(name = "email", nullable = false, unique = true, length = 255)
+    val email: String = "",
 
     @Column(name = "password_hash", length = 255)
     val passwordHash: String? = null,
 
-    @Column(name = "profile_uuid", nullable = false, unique = true)
-    val profileUuid: UUID = UUID.randomUUID(),
+    @Column(name = "name", length = 255)
+    var name: String? = null,
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, length = 30)
-    var role: UserRole = UserRole.CONSUMER,
+    @Column(name = "role", nullable = false, length = 20)
+    var role: UserRole = UserRole.USER,
 
-    @Column(name = "is_active", nullable = false)
-    val isActive: Boolean = true,
+    @Column(name = "gdpr_consent", nullable = false)
+    var gdprConsent: Boolean = false,
 
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: OffsetDateTime = OffsetDateTime.now(),

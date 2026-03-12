@@ -5,16 +5,10 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Entity
-@Table(name = "restaurant")
+@Table(name = "restaurants")
 class Restaurant(
     @Id
     var id: UUID = UUID.randomUUID(),
-
-    @Column(name = "tenant_id", nullable = false, unique = true)
-    val tenantId: UUID,
-
-    @Column(name = "owner_id", nullable = false)
-    val ownerId: UUID,
 
     @Column(name = "name", nullable = false, length = 255)
     var name: String = "",
@@ -25,7 +19,7 @@ class Restaurant(
     @Column(name = "description", columnDefinition = "TEXT")
     var description: String? = null,
 
-    @Column(name = "address", columnDefinition = "TEXT")
+    @Column(name = "address", length = 500)
     var address: String? = null,
 
     @Column(name = "phone", length = 30)
@@ -34,8 +28,8 @@ class Restaurant(
     @Column(name = "logo_url", length = 500)
     var logoUrl: String? = null,
 
-    @Column(name = "is_active", nullable = false)
-    var isActive: Boolean = true,
+    @Column(name = "active", nullable = false)
+    var active: Boolean = true,
 
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: OffsetDateTime = OffsetDateTime.now(),

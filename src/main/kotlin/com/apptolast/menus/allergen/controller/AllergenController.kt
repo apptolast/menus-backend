@@ -1,6 +1,5 @@
 package com.apptolast.menus.allergen.controller
 
-import com.apptolast.menus.allergen.dto.response.AllergenDetailResponse
 import com.apptolast.menus.allergen.dto.response.AllergenResponse
 import com.apptolast.menus.allergen.service.AllergenService
 import io.swagger.v3.oas.annotations.Operation
@@ -21,7 +20,7 @@ class AllergenController(
 ) {
 
     @GetMapping
-    @Operation(summary = "List all 14 EU allergens with translations")
+    @Operation(summary = "List all 14 EU allergens")
     @ApiResponses(
         ApiResponse(responseCode = "200", description = "List of all allergens")
     )
@@ -31,11 +30,11 @@ class AllergenController(
     @GetMapping("/{code}")
     @Operation(summary = "Get a single allergen by code (e.g., GLUTEN, EGGS, MILK)")
     @ApiResponses(
-        ApiResponse(responseCode = "200", description = "Allergen detail with all translations"),
+        ApiResponse(responseCode = "200", description = "Allergen detail"),
         ApiResponse(responseCode = "404", description = "Allergen not found")
     )
     fun getAllergenByCode(
         @PathVariable code: String
-    ): ResponseEntity<AllergenDetailResponse> =
+    ): ResponseEntity<AllergenResponse> =
         ResponseEntity.ok(allergenService.findByCode(code))
 }

@@ -5,7 +5,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "app")
 data class AppConfig(
     val jwt: JwtProperties = JwtProperties(),
-    val encryption: EncryptionProperties = EncryptionProperties(),
     val cors: CorsProperties = CorsProperties(),
     val google: GoogleProperties = GoogleProperties()
 ) {
@@ -13,10 +12,6 @@ data class AppConfig(
         val secret: String = "",
         val accessExpiration: Long = 900,
         val refreshExpiration: Long = 604800
-    )
-
-    data class EncryptionProperties(
-        val key: String = ""
     )
 
     data class CorsProperties(

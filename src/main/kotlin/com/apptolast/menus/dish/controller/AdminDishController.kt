@@ -4,91 +4,90 @@ import com.apptolast.menus.dish.dto.request.DishAllergenRequest
 import com.apptolast.menus.dish.dto.request.DishRequest
 import com.apptolast.menus.dish.dto.response.DishResponse
 import com.apptolast.menus.dish.service.DishService
-import com.apptolast.menus.restaurant.service.RestaurantService
-import com.apptolast.menus.shared.security.UserPrincipal
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
 
 @RestController
-@RequestMapping("/api/v1/admin/dishes")
 @Tag(name = "Admin - Dishes", description = "Dish and allergen management")
 @SecurityRequirement(name = "Bearer Authentication")
 class AdminDishController(
-    private val dishService: DishService,
-    private val restaurantService: RestaurantService
+    private val dishService: DishService
 ) {
 
-    @GetMapping
-    @Operation(summary = "List all dishes for own restaurant")
+    @GetMapping("/api/v1/admin/restaurants/{restaurantId}/dishes")
+    @Operation(summary = "List all dishes for a restaurant")
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "List of dishes"),
+        ApiResponse(responseCode = "401", description = "Unauthorized"),
+        ApiResponse(responseCode = "403", description = "Forbidden")
+    )
     fun listDishes(
-        @AuthenticationPrincipal principal: UserPrincipal
-    ): ResponseEntity<List<DishResponse>> {
-        val restaurant = restaurantService.findByOwnerId(principal.userId)
-        return ResponseEntity.ok(dishService.findByRestaurant(restaurant.id))
-    }
+        @PathVariable restaurantId: UUID
+    ): ResponseEntity<List<DishResponse>> =
+        ResponseEntity.ok(dishService.findByRestaurant(restaurantId))
 
-    @PostMapping
+    @PostMapping("/api/v1/admin/dishes")
     @Operation(summary = "Create a dish with allergens")
+    @ApiResponses(
+        ApiResponse(responseCode = "201", description = "Dish created"),
+        ApiResponse(responseCode = "400", description = "Validation failed"),
+        ApiResponse(responseCode = "404", description = "Section not found")
+    )
     fun createDish(
-        @AuthenticationPrincipal principal: UserPrincipal,
         @Valid @RequestBody request: DishRequest
-    ): ResponseEntity<DishResponse> {
-        val restaurant = restaurantService.findByOwnerId(principal.userId)
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(dishService.create(restaurant.id, request))
-    }
+    ): ResponseEntity<DishResponse> =
+        ResponseEntity.status(HttpStatus.CREATED).body(dishService.create(request))
 
-    @PutMapping("/{id}")
+    @PutMapping("/api/v1/admin/dishes/{id}")
     @Operation(summary = "Update a dish")
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Dish updated"),
+        ApiResponse(responseCode = "400", description = "Validation failed"),
+        ApiResponse(responseCode = "404", description = "Dish not found")
+    )
     fun updateDish(
-        @AuthenticationPrincipal principal: UserPrincipal,
         @PathVariable id: UUID,
         @Valid @RequestBody request: DishRequest
-    ): ResponseEntity<DishResponse> {
-        val restaurant = restaurantService.findByOwnerId(principal.userId)
-        return ResponseEntity.ok(dishService.update(id, restaurant.id, request))
-    }
+    ): ResponseEntity<DishResponse> =
+        ResponseEntity.ok(dishService.update(id, request))
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/api/v1/admin/dishes/{id}")
     @Operation(summary = "Delete a dish")
-    fun deleteDish(
-        @AuthenticationPrincipal principal: UserPrincipal,
-        @PathVariable id: UUID
-    ): ResponseEntity<Void> {
-        val restaurant = restaurantService.findByOwnerId(principal.userId)
-        dishService.delete(id, restaurant.id)
+    @ApiResponse(responseCode = "204", description = "Dish deleted")
+    fun deleteDish(@PathVariable id: UUID): ResponseEntity<Void> {
+        dishService.delete(id)
         return ResponseEntity.noContent().build()
     }
 
-    @PostMapping("/{id}/allergens")
+    @PostMapping("/api/v1/admin/dishes/{id}/allergens")
     @Operation(summary = "Add or update an allergen on a dish")
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Allergen added or updated"),
+        ApiResponse(responseCode = "400", description = "Validation failed"),
+        ApiResponse(responseCode = "404", description = "Dish or allergen not found")
+    )
     fun addAllergen(
-        @AuthenticationPrincipal principal: UserPrincipal,
         @PathVariable id: UUID,
         @Valid @RequestBody request: DishAllergenRequest
-    ): ResponseEntity<DishResponse> {
-        val restaurant = restaurantService.findByOwnerId(principal.userId)
-        return ResponseEntity.ok(
-            dishService.addAllergen(id, restaurant.id, principal.profileUuid, request)
-        )
-    }
+    ): ResponseEntity<DishResponse> =
+        ResponseEntity.ok(dishService.addAllergen(id, request))
 
-    @DeleteMapping("/{id}/allergens/{allergenId}")
+    @DeleteMapping("/api/v1/admin/dishes/{id}/allergens/{allergenId}")
     @Operation(summary = "Remove an allergen from a dish")
+    @ApiResponse(responseCode = "204", description = "Allergen removed")
     fun removeAllergen(
-        @AuthenticationPrincipal principal: UserPrincipal,
         @PathVariable id: UUID,
         @PathVariable allergenId: Int
     ): ResponseEntity<Void> {
-        val restaurant = restaurantService.findByOwnerId(principal.userId)
-        dishService.removeAllergen(id, allergenId, restaurant.id, principal.profileUuid)
+        dishService.removeAllergen(id, allergenId)
         return ResponseEntity.noContent().build()
     }
 }

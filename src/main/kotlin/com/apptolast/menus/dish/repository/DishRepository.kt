@@ -7,11 +7,9 @@ import java.util.UUID
 
 interface DishRepository : JpaRepository<Dish, UUID> {
     fun findBySectionId(sectionId: UUID): List<Dish>
-    fun findBySectionMenuRestaurantId(restaurantId: UUID): List<Dish>
-
-    @Query("SELECT COUNT(d) FROM Dish d WHERE d.section.menu.restaurantId = :restaurantId")
-    fun countByRestaurantId(restaurantId: UUID): Long
-
-    @Query("SELECT d FROM Dish d LEFT JOIN FETCH d.allergens da LEFT JOIN FETCH da.allergen WHERE d.section.id = :sectionId AND d.isAvailable = true")
-    fun findWithAllergensBySectionId(sectionId: UUID): List<Dish>
+    fun findBySectionIdOrderByDisplayOrderAsc(sectionId: UUID): List<Dish>
+    @Query("SELECT d FROM Dish d LEFT JOIN FETCH d.allergens LEFT JOIN FETCH d.recipe WHERE d.section.id = :sectionId ORDER BY d.displayOrder ASC")
+    fun findBySectionIdWithAllergensAndRecipe(sectionId: UUID): List<Dish>
+    @Query("SELECT d FROM Dish d WHERE d.section.menu.restaurantId = :restaurantId ORDER BY d.displayOrder ASC")
+    fun findByRestaurantId(restaurantId: UUID): List<Dish>
 }

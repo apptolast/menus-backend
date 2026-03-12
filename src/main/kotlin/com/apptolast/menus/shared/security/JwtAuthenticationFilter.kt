@@ -28,20 +28,15 @@ class JwtAuthenticationFilter(
             jwtTokenProvider.getTokenType(token) == "access"
         ) {
             val userId = jwtTokenProvider.getUserIdFromToken(token)
-            val profileUuid = jwtTokenProvider.getProfileUuidFromToken(token)
             val roleStr = jwtTokenProvider.getRoleFromToken(token)
-            val tenantId = jwtTokenProvider.getTenantIdFromToken(token)
-
             val role = runCatching { UserRole.valueOf(roleStr) }.getOrNull()
-            if (profileUuid == null || role == null) {
-                log.warn("Valid JWT signature but missing or invalid claims: profileUuid={}, role='{}'", profileUuid, roleStr)
+
+            if (role == null) {
+                log.warn("Valid JWT signature but missing or invalid role claim: role='{}'", roleStr)
             } else {
                 val principal = UserPrincipal(
                     userId = userId,
-                    profileUuid = profileUuid,
-                    role = role,
-                    tenantId = tenantId,
-                    _username = userId.toString()
+                    role = role
                 )
                 val authentication = UsernamePasswordAuthenticationToken(
                     principal, null, principal.authorities

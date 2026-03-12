@@ -23,7 +23,7 @@ class RestaurantServiceImpl(
     override fun findAll(name: String?, page: Int, size: Int): PageResponse<RestaurantResponse> {
         val pageable = PageRequest.of(page, size, Sort.by("name").ascending())
         val result = if (name.isNullOrBlank()) {
-            restaurantRepository.findByIsActiveTrue(pageable)
+            restaurantRepository.findByActiveTrue(pageable)
         } else {
             restaurantRepository.findActiveByNameContaining(name, pageable)
         }
@@ -42,14 +42,22 @@ class RestaurantServiceImpl(
             .orElseThrow { ResourceNotFoundException("RESTAURANT_NOT_FOUND", "Restaurant not found") }
             .toResponse()
 
-    override fun findByOwnerId(ownerId: UUID): RestaurantResponse =
-        restaurantRepository.findByOwnerId(ownerId)
-            .orElseThrow { ResourceNotFoundException("RESTAURANT_NOT_FOUND", "Restaurant not found for this owner") }
-            .toResponse()
+    @Transactional
+    override fun create(request: RestaurantRequest): RestaurantResponse {
+        val restaurant = Restaurant(
+            name = request.name,
+            slug = request.slug,
+            description = request.description,
+            address = request.address,
+            phone = request.phone,
+            logoUrl = request.logoUrl
+        )
+        return restaurantRepository.save(restaurant).toResponse()
+    }
 
     @Transactional
-    override fun update(ownerId: UUID, request: RestaurantRequest): RestaurantResponse {
-        val restaurant = restaurantRepository.findByOwnerId(ownerId)
+    override fun update(restaurantId: UUID, request: RestaurantRequest): RestaurantResponse {
+        val restaurant = restaurantRepository.findById(restaurantId)
             .orElseThrow { ResourceNotFoundException("RESTAURANT_NOT_FOUND", "Restaurant not found") }
         restaurant.name = request.name
         restaurant.slug = request.slug
@@ -61,6 +69,15 @@ class RestaurantServiceImpl(
         return restaurantRepository.save(restaurant).toResponse()
     }
 
+    @Transactional
+    override fun deactivate(restaurantId: UUID) {
+        val restaurant = restaurantRepository.findById(restaurantId)
+            .orElseThrow { ResourceNotFoundException("RESTAURANT_NOT_FOUND", "Restaurant not found") }
+        restaurant.active = false
+        restaurant.updatedAt = OffsetDateTime.now()
+        restaurantRepository.save(restaurant)
+    }
+
     private fun Restaurant.toResponse() = RestaurantResponse(
         id = id,
         name = name,
@@ -69,7 +86,7 @@ class RestaurantServiceImpl(
         address = address ?: "",
         phone = phone ?: "",
         logoUrl = logoUrl,
-        active = isActive,
+        active = active,
         createdAt = createdAt
     )
 }

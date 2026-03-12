@@ -2,6 +2,5 @@ package com.apptolast.menus.dish.model.enum
 
 enum class ContainmentLevel {
     CONTAINS,
-    MAY_CONTAIN,
-    FREE_OF
+    MAY_CONTAIN
 }

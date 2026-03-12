@@ -5,7 +5,7 @@ import java.util.UUID
 
 @Entity
 @Table(
-    name = "oauth_account",
+    name = "oauth_accounts",
     uniqueConstraints = [UniqueConstraint(columnNames = ["provider", "provider_id"])]
 )
 class OAuthAccount(
@@ -21,6 +21,6 @@ class OAuthAccount(
     @Column(name = "provider_id", nullable = false, length = 255)
     val providerId: String = "",
 
-    @Column(name = "email", nullable = false, columnDefinition = "BYTEA")
-    val email: ByteArray = ByteArray(0)
+    @Column(name = "email", nullable = false, length = 255)
+    val email: String = ""
 )

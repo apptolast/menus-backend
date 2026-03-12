@@ -6,13 +6,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import java.util.UUID
 
-data class UserPrincipal(
+class UserPrincipal(
     val userId: UUID,
-    val profileUuid: UUID,
     val role: UserRole,
-    val tenantId: UUID? = null,
-    private val _username: String
+    private val _username: String = userId.toString()
 ) : UserDetails {
+
     override fun getAuthorities(): Collection<GrantedAuthority> =
         listOf(SimpleGrantedAuthority("ROLE_${role.name}"))
 

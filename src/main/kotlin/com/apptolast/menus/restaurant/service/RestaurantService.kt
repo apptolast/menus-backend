@@ -8,6 +8,7 @@ import java.util.UUID
 interface RestaurantService {
     fun findAll(name: String?, page: Int, size: Int): PageResponse<RestaurantResponse>
     fun findById(id: UUID): RestaurantResponse
-    fun findByOwnerId(ownerId: UUID): RestaurantResponse
-    fun update(ownerId: UUID, request: RestaurantRequest): RestaurantResponse
+    fun create(request: RestaurantRequest): RestaurantResponse
+    fun update(restaurantId: UUID, request: RestaurantRequest): RestaurantResponse
+    fun deactivate(restaurantId: UUID)
 }

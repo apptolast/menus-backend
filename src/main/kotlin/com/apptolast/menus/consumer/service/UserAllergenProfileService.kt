@@ -5,7 +5,7 @@ import com.apptolast.menus.consumer.dto.response.AllergenProfileResponse
 import java.util.UUID
 
 interface UserAllergenProfileService {
-    fun getProfile(profileUuid: UUID): AllergenProfileResponse
-    fun upsertProfile(profileUuid: UUID, request: AllergenProfileRequest): AllergenProfileResponse
-    fun deleteProfile(profileUuid: UUID)
+    fun getProfile(userId: UUID): AllergenProfileResponse
+    fun upsertProfile(userId: UUID, request: AllergenProfileRequest): AllergenProfileResponse
+    fun deleteProfile(userId: UUID)
 }

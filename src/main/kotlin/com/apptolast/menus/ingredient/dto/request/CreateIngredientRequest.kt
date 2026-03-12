@@ -8,17 +8,10 @@ data class CreateIngredientRequest(
     @field:Size(max = 255, message = "Name must not exceed 255 characters")
     val name: String,
 
+    val description: String? = null,
+
     @field:Size(max = 255, message = "Brand must not exceed 255 characters")
     val brand: String? = null,
 
-    @field:Size(max = 255, message = "Supplier must not exceed 255 characters")
-    val supplier: String? = null,
-
-    val allergens: List<String> = emptyList(),
-
-    val traces: List<String> = emptyList(),
-
-    val ocrRawText: String? = null,
-
-    val notes: String? = null
+    val labelInfo: String? = null
 )

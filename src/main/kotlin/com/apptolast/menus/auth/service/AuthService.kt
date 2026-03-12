@@ -1,13 +1,13 @@
 package com.apptolast.menus.auth.service
 
 import com.apptolast.menus.auth.dto.request.LoginRequest
+import com.apptolast.menus.auth.dto.request.RegisterAdminRequest
 import com.apptolast.menus.auth.dto.request.RegisterRequest
-import com.apptolast.menus.auth.dto.request.RegisterRestaurantRequest
 import com.apptolast.menus.auth.dto.response.AuthResponse
 
 interface AuthService {
     fun register(request: RegisterRequest): AuthResponse
-    fun registerRestaurant(request: RegisterRestaurantRequest): AuthResponse
+    fun registerAdmin(request: RegisterAdminRequest): AuthResponse
     fun login(request: LoginRequest): AuthResponse
     fun refresh(refreshToken: String): AuthResponse
     fun loginWithGoogle(idToken: String): AuthResponse

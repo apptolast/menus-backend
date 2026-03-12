@@ -1,10 +1,15 @@
 package com.apptolast.menus.ingredient.service.impl
 
-import com.apptolast.menus.config.TenantContext
+import com.apptolast.menus.allergen.repository.AllergenRepository
+import com.apptolast.menus.dish.model.enum.ContainmentLevel
+import com.apptolast.menus.ingredient.dto.request.IngredientAllergenRequest
+import com.apptolast.menus.ingredient.dto.response.IngredientAllergenResponse
+import com.apptolast.menus.ingredient.mapper.toAllergenResponse
 import com.apptolast.menus.ingredient.model.entity.Ingredient
+import com.apptolast.menus.ingredient.model.entity.IngredientAllergen
+import com.apptolast.menus.ingredient.repository.IngredientAllergenRepository
 import com.apptolast.menus.ingredient.repository.IngredientRepository
 import com.apptolast.menus.ingredient.service.IngredientService
-import com.apptolast.menus.shared.exception.BusinessValidationException
 import com.apptolast.menus.shared.exception.ConflictException
 import com.apptolast.menus.shared.exception.ResourceNotFoundException
 import org.slf4j.LoggerFactory
@@ -16,108 +21,97 @@ import java.util.UUID
 @Service
 @Transactional(readOnly = true)
 class IngredientServiceImpl(
-    private val ingredientRepository: IngredientRepository
+    private val ingredientRepository: IngredientRepository,
+    private val ingredientAllergenRepository: IngredientAllergenRepository,
+    private val allergenRepository: AllergenRepository
 ) : IngredientService {
 
     private val log = LoggerFactory.getLogger(IngredientServiceImpl::class.java)
 
     override fun findAll(): List<Ingredient> {
-        val tenantId = requireTenantId()
-        log.info("Listing all ingredients for tenant {}", tenantId)
-        return ingredientRepository.findAllByTenantId(tenantId)
+        log.info("Listing all ingredients")
+        return ingredientRepository.findAll()
     }
 
     override fun findById(id: UUID): Ingredient {
-        val tenantId = requireTenantId()
-        log.info("Finding ingredient {} for tenant {}", id, tenantId)
-        val ingredient = ingredientRepository.findById(id)
-            ?: throw ResourceNotFoundException(message = "Ingredient with id $id not found")
-        if (ingredient.tenantId != tenantId) {
-            throw ResourceNotFoundException(message = "Ingredient with id $id not found")
-        }
-        return ingredient
+        log.info("Finding ingredient {}", id)
+        return ingredientRepository.findById(id)
+            .orElseThrow { ResourceNotFoundException(message = "Ingredient with id $id not found") }
     }
 
     @Transactional
     override fun create(ingredient: Ingredient): Ingredient {
-        val tenantId = requireTenantId()
-        log.info("Creating ingredient '{}' for tenant {}", ingredient.name, tenantId)
-
-        if (ingredientRepository.existsByNameAndTenantId(ingredient.name, tenantId)) {
+        log.info("Creating ingredient '{}'", ingredient.name)
+        if (ingredientRepository.existsByName(ingredient.name)) {
             throw ConflictException(
                 errorCode = "INGREDIENT_ALREADY_EXISTS",
-                message = "Ingredient with name '${ingredient.name}' already exists for this tenant"
+                message = "Ingredient with name '${ingredient.name}' already exists"
             )
         }
-
         return ingredientRepository.save(ingredient)
     }
 
     @Transactional
     override fun update(id: UUID, ingredient: Ingredient): Ingredient {
-        val tenantId = requireTenantId()
-        log.info("Updating ingredient {} for tenant {}", id, tenantId)
-
+        log.info("Updating ingredient {}", id)
         val existing = ingredientRepository.findById(id)
-            ?: throw ResourceNotFoundException(message = "Ingredient with id $id not found")
-        if (existing.tenantId != tenantId) {
-            throw ResourceNotFoundException(message = "Ingredient with id $id not found")
-        }
-
-        if (existing.name != ingredient.name &&
-            ingredientRepository.existsByNameAndTenantId(ingredient.name, tenantId)
-        ) {
-            throw ConflictException(
-                errorCode = "INGREDIENT_ALREADY_EXISTS",
-                message = "Ingredient with name '${ingredient.name}' already exists for this tenant"
-            )
-        }
-
+            .orElseThrow { ResourceNotFoundException(message = "Ingredient with id $id not found") }
         existing.name = ingredient.name
+        existing.description = ingredient.description
         existing.brand = ingredient.brand
-        existing.supplier = ingredient.supplier
-        existing.allergens = ingredient.allergens
-        existing.traces = ingredient.traces
-        existing.ocrRawText = ingredient.ocrRawText
-        existing.notes = ingredient.notes
+        existing.labelInfo = ingredient.labelInfo
         existing.updatedAt = OffsetDateTime.now()
-
         return ingredientRepository.save(existing)
     }
 
     @Transactional
     override fun delete(id: UUID) {
-        val tenantId = requireTenantId()
-        log.info("Deleting ingredient {} for tenant {}", id, tenantId)
-
-        val existing = ingredientRepository.findById(id)
-            ?: throw ResourceNotFoundException(message = "Ingredient with id $id not found")
-        if (existing.tenantId != tenantId) {
+        log.info("Deleting ingredient {}", id)
+        if (!ingredientRepository.existsById(id)) {
             throw ResourceNotFoundException(message = "Ingredient with id $id not found")
         }
-
+        ingredientAllergenRepository.deleteAll(ingredientAllergenRepository.findByIngredientId(id))
         ingredientRepository.deleteById(id)
     }
 
     override fun searchByName(name: String): List<Ingredient> {
-        val tenantId = requireTenantId()
-        log.info("Searching ingredients by name '{}' for tenant {}", name, tenantId)
-        return ingredientRepository.searchByName(name, tenantId)
+        log.info("Searching ingredients by name '{}'", name)
+        return ingredientRepository.searchByName(name)
     }
 
-    private fun requireTenantId(): UUID {
-        val tenantString = TenantContext.getTenant()
-            ?: throw BusinessValidationException(
-                errorCode = "TENANT_REQUIRED",
-                message = "Tenant context is not set. Authentication required."
-            )
-        return try {
-            UUID.fromString(tenantString)
-        } catch (e: IllegalArgumentException) {
-            throw BusinessValidationException(
-                errorCode = "INVALID_TENANT",
-                message = "Invalid tenant ID format"
-            )
+    override fun getAllergens(id: UUID): List<IngredientAllergenResponse> {
+        log.info("Getting allergens for ingredient {}", id)
+        if (!ingredientRepository.existsById(id)) {
+            throw ResourceNotFoundException(message = "Ingredient with id $id not found")
         }
+        return ingredientAllergenRepository.findByIngredientId(id).map { it.toAllergenResponse() }
+    }
+
+    @Transactional
+    override fun setAllergens(id: UUID, allergens: List<IngredientAllergenRequest>): Ingredient {
+        log.info("Setting {} allergens for ingredient {}", allergens.size, id)
+        val ingredient = ingredientRepository.findById(id)
+            .orElseThrow { ResourceNotFoundException(message = "Ingredient with id $id not found") }
+
+        ingredientAllergenRepository.deleteAll(ingredientAllergenRepository.findByIngredientId(id))
+
+        val newAllergens = allergens.map { request ->
+            val allergen = allergenRepository.findByCode(request.allergenCode)
+                ?: throw ResourceNotFoundException(message = "Allergen with code '${request.allergenCode}' not found")
+            val level = runCatching { ContainmentLevel.valueOf(request.containmentLevel) }
+                .getOrElse {
+                    throw ResourceNotFoundException(
+                        message = "Invalid containment level '${request.containmentLevel}'. Valid values: ${ContainmentLevel.values().joinToString()}"
+                    )
+                }
+            IngredientAllergen(ingredient = ingredient, allergen = allergen, containmentLevel = level)
+        }
+
+        if (newAllergens.isNotEmpty()) {
+            ingredientAllergenRepository.saveAll(newAllergens)
+        }
+
+        ingredient.updatedAt = OffsetDateTime.now()
+        return ingredientRepository.save(ingredient)
     }
 }

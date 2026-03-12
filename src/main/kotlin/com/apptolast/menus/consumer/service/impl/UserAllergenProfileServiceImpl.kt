@@ -18,14 +18,14 @@ class UserAllergenProfileServiceImpl(
 ) : UserAllergenProfileService {
 
     @Transactional(readOnly = true)
-    override fun getProfile(profileUuid: UUID): AllergenProfileResponse {
-        val profile = userAllergenProfileRepository.findByProfileUuid(profileUuid)
+    override fun getProfile(userId: UUID): AllergenProfileResponse {
+        val profile = userAllergenProfileRepository.findByUserId(userId)
             .orElseThrow { ResourceNotFoundException("PROFILE_NOT_FOUND", "Allergen profile not found") }
         return profile.toResponse()
     }
 
-    override fun upsertProfile(profileUuid: UUID, request: AllergenProfileRequest): AllergenProfileResponse {
-        val profile = userAllergenProfileRepository.findByProfileUuid(profileUuid)
+    override fun upsertProfile(userId: UUID, request: AllergenProfileRequest): AllergenProfileResponse {
+        val profile = userAllergenProfileRepository.findByUserId(userId)
             .map { existing ->
                 existing.allergenCodes = request.allergenCodes
                 existing.severityNotes = request.severityNotes
@@ -34,7 +34,7 @@ class UserAllergenProfileServiceImpl(
             }
             .orElseGet {
                 UserAllergenProfile(
-                    profileUuid = profileUuid,
+                    userId = userId,
                     allergenCodes = request.allergenCodes,
                     severityNotes = request.severityNotes
                 )
@@ -42,12 +42,12 @@ class UserAllergenProfileServiceImpl(
         return userAllergenProfileRepository.save(profile).toResponse()
     }
 
-    override fun deleteProfile(profileUuid: UUID) {
-        userAllergenProfileRepository.deleteByProfileUuid(profileUuid)
+    override fun deleteProfile(userId: UUID) {
+        userAllergenProfileRepository.deleteByUserId(userId)
     }
 
     private fun UserAllergenProfile.toResponse() = AllergenProfileResponse(
-        profileUuid = profileUuid,
+        userId = userId,
         allergenCodes = allergenCodes,
         severityNotes = severityNotes ?: "",
         updatedAt = updatedAt

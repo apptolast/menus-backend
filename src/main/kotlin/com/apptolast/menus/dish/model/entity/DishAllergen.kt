@@ -3,27 +3,27 @@ package com.apptolast.menus.dish.model.entity
 import com.apptolast.menus.allergen.model.entity.Allergen
 import com.apptolast.menus.dish.model.enum.ContainmentLevel
 import jakarta.persistence.*
+import java.io.Serializable
 import java.util.UUID
 
+data class DishAllergenId(
+    val dish: UUID? = null,
+    val allergen: Int? = null
+) : Serializable
+
 @Entity
-@Table(
-    name = "dish_allergen",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["dish_id", "allergen_id"])]
-)
+@Table(name = "dish_allergens")
+@IdClass(DishAllergenId::class)
 class DishAllergen(
     @Id
-    val id: UUID = UUID.randomUUID(),
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dish_id", nullable = false)
     val dish: Dish = Dish(),
 
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "allergen_id", nullable = false)
     val allergen: Allergen = Allergen(),
-
-    @Column(name = "tenant_id", nullable = false)
-    val tenantId: UUID? = null,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "containment_level", nullable = false, length = 20)

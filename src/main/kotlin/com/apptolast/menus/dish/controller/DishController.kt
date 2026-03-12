@@ -1,6 +1,5 @@
 package com.apptolast.menus.dish.controller
 
-import com.apptolast.menus.auth.service.ConsentService
 import com.apptolast.menus.consumer.service.UserAllergenProfileService
 import com.apptolast.menus.dish.dto.response.DishResponse
 import com.apptolast.menus.dish.service.DishService
@@ -17,23 +16,20 @@ import java.util.UUID
 @Tag(name = "Dishes (Public)", description = "Dish listing with allergen semáforo")
 class DishController(
     private val dishService: DishService,
-    private val userAllergenProfileService: UserAllergenProfileService,
-    private val consentService: ConsentService
+    private val userAllergenProfileService: UserAllergenProfileService
 ) {
 
     @GetMapping
-    @Operation(summary = "List dishes in a section with allergen semáforo if authenticated with consent")
+    @Operation(summary = "List dishes in a section with allergen semáforo if authenticated")
     fun getDishesBySection(
         @PathVariable restaurantId: UUID,
         @PathVariable sectionId: UUID,
         @AuthenticationPrincipal principal: UserPrincipal?
     ): ResponseEntity<List<DishResponse>> {
-        val userAllergenCodes = principal
-            ?.takeIf { consentService.hasActiveConsent(it.profileUuid) }
-            ?.let { p ->
-                runCatching { userAllergenProfileService.getProfile(p.profileUuid).allergenCodes }
-                    .getOrElse { emptyList() }
-            }
+        val userAllergenCodes = principal?.let { p ->
+            runCatching { userAllergenProfileService.getProfile(p.userId).allergenCodes }
+                .getOrElse { emptyList() }
+        }
         return ResponseEntity.ok(dishService.findBySectionWithFilter(sectionId, userAllergenCodes))
     }
 }

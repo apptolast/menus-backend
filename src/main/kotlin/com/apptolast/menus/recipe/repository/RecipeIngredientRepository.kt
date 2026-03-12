@@ -1,11 +1,11 @@
 package com.apptolast.menus.recipe.repository
 
 import com.apptolast.menus.recipe.model.entity.RecipeIngredient
+import com.apptolast.menus.recipe.model.entity.RecipeIngredientId
+import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 
-interface RecipeIngredientRepository {
+interface RecipeIngredientRepository : JpaRepository<RecipeIngredient, RecipeIngredientId> {
     fun findByRecipeId(recipeId: UUID): List<RecipeIngredient>
-    fun findBySubRecipeId(subRecipeId: UUID): List<RecipeIngredient>
-    fun saveAll(entities: List<RecipeIngredient>): List<RecipeIngredient>
     fun deleteByRecipeId(recipeId: UUID)
 }

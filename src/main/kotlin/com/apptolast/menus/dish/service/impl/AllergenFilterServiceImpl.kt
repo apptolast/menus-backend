@@ -20,8 +20,7 @@ class AllergenFilterServiceImpl : AllergenFilterService {
         userAllergenCodes: List<String>
     ): SafetyLevel {
         val relevantAllergens = dishAllergens.filter { da ->
-            da.allergen.code in userAllergenCodes &&
-                da.containmentLevel != ContainmentLevel.FREE_OF
+            da.allergen.code in userAllergenCodes
         }
         return when {
             relevantAllergens.any { it.containmentLevel == ContainmentLevel.CONTAINS } -> SafetyLevel.DANGER
@@ -35,9 +34,6 @@ class AllergenFilterServiceImpl : AllergenFilterService {
         userAllergenCodes: List<String>
     ): List<String> =
         dishAllergens
-            .filter { da ->
-                da.allergen.code in userAllergenCodes &&
-                    da.containmentLevel != ContainmentLevel.FREE_OF
-            }
+            .filter { da -> da.allergen.code in userAllergenCodes }
             .map { it.allergen.code }
 }

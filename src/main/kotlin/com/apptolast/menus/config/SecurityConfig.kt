@@ -19,7 +19,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableWebSecurity
 class SecurityConfig(
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
-    private val tenantFilter: TenantFilter,
     private val appConfig: AppConfig
 ) {
 
@@ -33,32 +32,22 @@ class SecurityConfig(
                 auth
                     .requestMatchers(
                         "/api/v1/auth/register",
-                        "/api/v1/auth/register-restaurant",
+                        "/api/v1/auth/register-admin",
                         "/api/v1/auth/login",
                         "/api/v1/auth/refresh",
-                        "/api/v1/auth/oauth2/google",
                         "/api/v1/auth/oauth2/google/callback"
                     ).permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/allergens").permitAll()
-                    .requestMatchers(
-                        HttpMethod.GET,
-                        "/api/v1/restaurants",
-                        "/api/v1/restaurants/*",
-                        "/api/v1/restaurants/*/menu",
-                        "/api/v1/restaurants/*/sections/*/dishes"
-                    ).permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/public/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/allergens", "/api/v1/allergens/**").permitAll()
                     .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
                     .requestMatchers(
                         "/swagger-ui/**",
                         "/swagger-ui.html",
                         "/v3/api-docs/**"
                     ).permitAll()
-                    .requestMatchers("/api/v1/admin/**").authenticated()
+                    .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
-            .addFilterAfter(tenantFilter, JwtAuthenticationFilter::class.java)
         return http.build()
     }
 
