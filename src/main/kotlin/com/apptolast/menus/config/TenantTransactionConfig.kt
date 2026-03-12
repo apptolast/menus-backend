@@ -22,7 +22,8 @@ class TenantAwareJpaTransactionManager(emf: EntityManagerFactory) : JpaTransacti
     override fun doBegin(transaction: Any, definition: TransactionDefinition) {
         super.doBegin(transaction, definition)
         val tenantId = TenantContext.getTenant()?.takeIf { isValidUuid(it) } ?: return
-        val em = EntityManagerFactoryUtils.getTransactionalEntityManager(entityManagerFactory!!) ?: return
+        val emf = entityManagerFactory ?: return
+        val em = EntityManagerFactoryUtils.getTransactionalEntityManager(emf) ?: return
         em.unwrap(Session::class.java).doWork { connection ->
             connection.prepareStatement("SELECT set_config('app.current_tenant', ?, true)").use { stmt ->
                 stmt.setString(1, tenantId)
