@@ -104,6 +104,7 @@ class MenuServiceImpl(
         id = id,
         name = name,
         description = description ?: "",
+        published = published,
         archived = archived,
         displayOrder = displayOrder,
         sections = sections.map { it.toResponse() },

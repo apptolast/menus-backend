@@ -11,6 +11,8 @@ data class DishRequest(
     val description: String? = null,
     val price: BigDecimal? = null,
     val imageUrl: String? = null,
+    val available: Boolean = true,
+    val displayOrder: Int = 0,
     val allergens: List<DishAllergenRequest> = emptyList()
 )
 

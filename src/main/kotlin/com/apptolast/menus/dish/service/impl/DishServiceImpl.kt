@@ -48,7 +48,9 @@ class DishServiceImpl(
                 name = request.name,
                 description = request.description,
                 price = request.price,
-                imageUrl = request.imageUrl
+                imageUrl = request.imageUrl,
+                available = request.available,
+                displayOrder = request.displayOrder
             )
         )
         request.allergens.forEach { allergenReq ->
@@ -63,6 +65,8 @@ class DishServiceImpl(
         dish.description = request.description
         dish.price = request.price
         dish.imageUrl = request.imageUrl
+        dish.available = request.available
+        dish.displayOrder = request.displayOrder
         dish.updatedAt = OffsetDateTime.now()
         dishRepository.save(dish)
         return dish.toResponse(null)

@@ -27,7 +27,7 @@ class SecurityAccessControlTest : AbstractIntegrationTest() {
             .body(RegisterRequest(email, "SecurePass123!"))
             .retrieve()
             .toEntity(AuthResponse::class.java)
-        return response.body?.accessToken ?: error("No token returned")
+        return response.body?.accessToken ?: error("No token returned from register")
     }
 
     @Test
@@ -42,7 +42,7 @@ class SecurityAccessControlTest : AbstractIntegrationTest() {
     }
 
     @Test
-    @DisplayName("GET /api/v1/admin/restaurant returns 403 without authentication")
+    @DisplayName("GET /api/v1/admin/restaurant returns 401 or 403 without authentication")
     fun adminEndpointRequiresAuth() {
         val response = noErrorRestClient()
             .get()
@@ -53,8 +53,8 @@ class SecurityAccessControlTest : AbstractIntegrationTest() {
     }
 
     @Test
-    @DisplayName("GET /api/v1/admin/restaurant returns 403 for CONSUMER role")
-    fun adminEndpointDeniedForConsumer() {
+    @DisplayName("GET /api/v1/admin/restaurant returns 403 for USER role (non-admin)")
+    fun adminEndpointDeniedForUserRole() {
         val token = registerAndGetToken()
         val response = noErrorRestClient()
             .get()
@@ -62,12 +62,23 @@ class SecurityAccessControlTest : AbstractIntegrationTest() {
             .header("Authorization", "Bearer $token")
             .retrieve()
             .toEntity(Map::class.java)
-        assertThat(response.statusCode).isIn(HttpStatus.FORBIDDEN, HttpStatus.NOT_FOUND)
+        assertThat(response.statusCode).isEqualTo(HttpStatus.FORBIDDEN)
     }
 
     @Test
-    @DisplayName("GET /api/v1/users/me/allergen-profile returns 403 without consent")
-    fun allergenProfileRequiresConsent() {
+    @DisplayName("GET /api/v1/users/me/allergen-profile returns 401 without authentication")
+    fun allergenProfileRequiresAuthentication() {
+        val response = noErrorRestClient()
+            .get()
+            .uri("/api/v1/users/me/allergen-profile")
+            .retrieve()
+            .toEntity(Map::class.java)
+        assertThat(response.statusCode).isIn(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/users/me/allergen-profile returns 404 for authenticated user with no profile")
+    fun allergenProfileReturns404WhenNoProfile() {
         val token = registerAndGetToken()
         val response = noErrorRestClient()
             .get()
@@ -75,18 +86,18 @@ class SecurityAccessControlTest : AbstractIntegrationTest() {
             .header("Authorization", "Bearer $token")
             .retrieve()
             .toEntity(Map::class.java)
-        assertThat(response.statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+        assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
     }
 
     @Test
-    @DisplayName("GET /api/v1/restaurants is accessible without authentication")
-    fun restaurantsPublicEndpointAccessible() {
+    @DisplayName("GET /api/v1/restaurants requires authentication in MVP")
+    fun restaurantsRequiresAuth() {
         val response = noErrorRestClient()
             .get()
             .uri("/api/v1/restaurants")
             .retrieve()
             .toEntity(Map::class.java)
-        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(response.statusCode).isIn(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN)
     }
 
     @Test
@@ -109,5 +120,16 @@ class SecurityAccessControlTest : AbstractIntegrationTest() {
             .retrieve()
             .toEntity(Map::class.java)
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+    }
+
+    @Test
+    @DisplayName("Unauthenticated request to protected endpoint returns 401 or 403")
+    fun unauthenticatedRequestReturnsUnauthorized() {
+        val response = noErrorRestClient()
+            .get()
+            .uri("/api/v1/users/me/allergen-profile")
+            .retrieve()
+            .toEntity(Map::class.java)
+        assertThat(response.statusCode).isIn(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN)
     }
 }

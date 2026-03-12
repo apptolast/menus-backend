@@ -27,7 +27,7 @@ repositories {
     mavenCentral()
 }
 
-val testcontainersVersion = "1.21.1"
+val testcontainersVersion = "1.21.4"
 
 dependencyManagement {
     imports {
@@ -88,7 +88,7 @@ tasks.withType<Test> {
     useJUnitPlatform()
     testLogging {
         showStandardStreams = true
-        events("failed")
+        events("passed", "failed", "skipped")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
     }
 }
