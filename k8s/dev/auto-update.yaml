@@ -1,0 +1,100 @@
+# =============================================================================
+# Auto-update: CronJob that restarts the deployment every 2 hours
+# =============================================================================
+# Combined with imagePullPolicy: Always, this ensures pods always run
+# the latest image pushed to Docker Hub (apptolast/menus-backend:develop).
+#
+# How it works:
+#   1. CD pipeline pushes new image with :develop tag to Docker Hub
+#   2. Every 2 hours, this CronJob triggers a rolling restart
+#   3. Kubernetes pulls the fresh :develop image (imagePullPolicy: Always)
+#   4. RollingUpdate strategy ensures zero-downtime during restart
+#
+# Official docs:
+#   - CronJob: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/
+#   - RBAC: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+#   - kubectl rollout restart: https://kubernetes.io/docs/reference/kubectl/generated/kubectl_rollout/kubectl_rollout_restart/
+# =============================================================================
+
+# --- ServiceAccount for the CronJob ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: deployment-restarter
+  namespace: apptolast-menus-dev
+  labels:
+    app.kubernetes.io/component: auto-update
+
+---
+# --- Role with minimal permissions (only restart deployments) ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: deployment-restarter
+  namespace: apptolast-menus-dev
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "patch"]
+
+---
+# --- RoleBinding ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: deployment-restarter
+  namespace: apptolast-menus-dev
+subjects:
+  - kind: ServiceAccount
+    name: deployment-restarter
+    namespace: apptolast-menus-dev
+roleRef:
+  kind: Role
+  name: deployment-restarter
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# --- CronJob: restart deployment every 2 hours ---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: menus-backend-auto-update
+  namespace: apptolast-menus-dev
+  labels:
+    app.kubernetes.io/component: auto-update
+    app.kubernetes.io/part-of: menus-backend
+spec:
+  schedule: "0 */2 * * *"  # Every 2 hours at minute 0
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 60
+      template:
+        spec:
+          serviceAccountName: deployment-restarter
+          restartPolicy: OnFailure
+          containers:
+            - name: kubectl
+              image: bitnami/kubectl:1.31
+              command:
+                - kubectl
+                - rollout
+                - restart
+                - deployment/menus-backend
+                - -n
+                - apptolast-menus-dev
+              resources:
+                requests:
+                  memory: "32Mi"
+                  cpu: "10m"
+                limits:
+                  memory: "64Mi"
+                  cpu: "50m"
+              securityContext:
+                runAsNonRoot: true
+                runAsUser: 1000
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
