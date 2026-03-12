@@ -28,6 +28,21 @@ class Menu(
     @Column(name = "display_order", nullable = false)
     var displayOrder: Int = 0,
 
+    @Column(name = "is_published", nullable = false)
+    var isPublished: Boolean = false,
+
+    @Column(name = "valid_from")
+    var validFrom: OffsetDateTime? = null,
+
+    @Column(name = "valid_to")
+    var validTo: OffsetDateTime? = null,
+
+    @Column(name = "client_name", length = 255)
+    var clientName: String? = null,
+
+    @Column(name = "client_logo_url", length = 500)
+    var clientLogoUrl: String? = null,
+
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: OffsetDateTime = OffsetDateTime.now(),
 

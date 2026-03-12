@@ -49,6 +49,7 @@ class SecurityConfig(
                         "/api/v1/restaurants/*/menu",
                         "/api/v1/restaurants/*/sections/*/dishes"
                     ).permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/public/**").permitAll()
                     .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
                     .requestMatchers(
                         "/swagger-ui/**",
