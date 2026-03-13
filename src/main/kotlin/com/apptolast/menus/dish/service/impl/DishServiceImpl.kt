@@ -14,6 +14,7 @@ import com.apptolast.menus.dish.service.AllergenFilterService
 import com.apptolast.menus.dish.service.DishService
 import com.apptolast.menus.menu.repository.MenuSectionRepository
 import com.apptolast.menus.shared.exception.ResourceNotFoundException
+import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
@@ -26,7 +27,8 @@ class DishServiceImpl(
     private val dishAllergenRepository: DishAllergenRepository,
     private val allergenRepository: AllergenRepository,
     private val menuSectionRepository: MenuSectionRepository,
-    private val allergenFilterService: AllergenFilterService
+    private val allergenFilterService: AllergenFilterService,
+    private val entityManager: EntityManager
 ) : DishService {
 
     @Transactional(readOnly = true)
@@ -37,7 +39,7 @@ class DishServiceImpl(
 
     @Transactional(readOnly = true)
     override fun findByRestaurant(restaurantId: UUID): List<DishResponse> =
-        dishRepository.findByRestaurantId(restaurantId).map { it.toResponse(null) }
+        dishRepository.findByRestaurantIdWithAllergens(restaurantId).map { it.toResponse(null) }
 
     override fun create(request: DishRequest): DishResponse {
         val section = menuSectionRepository.findById(request.sectionId)
@@ -56,7 +58,9 @@ class DishServiceImpl(
         request.allergens.forEach { allergenReq ->
             saveAllergen(dish, allergenReq)
         }
-        return dishRepository.findById(dish.id).get().toResponse(null)
+        entityManager.flush()
+        entityManager.clear()
+        return dishRepository.findByIdWithAllergens(dish.id).get().toResponse(null)
     }
 
     override fun update(id: UUID, request: DishRequest): DishResponse {
@@ -75,7 +79,9 @@ class DishServiceImpl(
             saveAllergen(dish, allergenReq)
         }
 
-        return dishRepository.findById(dish.id).get().toResponse(null)
+        entityManager.flush()
+        entityManager.clear()
+        return dishRepository.findByIdWithAllergens(dish.id).get().toResponse(null)
     }
 
     override fun delete(id: UUID) {
@@ -101,7 +107,9 @@ class DishServiceImpl(
             notes = request.notes
         )
         dishAllergenRepository.save(dishAllergen)
-        return findDishOrThrow(dishId).toResponse(null)
+        entityManager.flush()
+        entityManager.clear()
+        return dishRepository.findByIdWithAllergens(dishId).get().toResponse(null)
     }
 
     override fun removeAllergen(dishId: UUID, allergenId: Int) {
