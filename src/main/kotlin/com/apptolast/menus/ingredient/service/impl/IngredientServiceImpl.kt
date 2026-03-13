@@ -30,12 +30,12 @@ class IngredientServiceImpl(
 
     override fun findAll(): List<Ingredient> {
         log.info("Listing all ingredients")
-        return ingredientRepository.findAll()
+        return ingredientRepository.findAllWithAllergens()
     }
 
     override fun findById(id: UUID): Ingredient {
         log.info("Finding ingredient {}", id)
-        return ingredientRepository.findById(id)
+        return ingredientRepository.findByIdWithAllergens(id)
             .orElseThrow { ResourceNotFoundException(message = "Ingredient with id $id not found") }
     }
 
@@ -52,7 +52,7 @@ class IngredientServiceImpl(
         if (allergens.isNotEmpty()) {
             saveAllergens(saved, allergens)
         }
-        return ingredientRepository.findById(saved.id).get()
+        return ingredientRepository.findByIdWithAllergens(saved.id).get()
     }
 
     @Transactional
@@ -74,7 +74,7 @@ class IngredientServiceImpl(
         }
 
         ingredientRepository.save(existing)
-        return ingredientRepository.findById(id).get()
+        return ingredientRepository.findByIdWithAllergens(id).get()
     }
 
     @Transactional
@@ -113,7 +113,7 @@ class IngredientServiceImpl(
 
         ingredient.updatedAt = OffsetDateTime.now()
         ingredientRepository.save(ingredient)
-        return ingredientRepository.findById(id).get()
+        return ingredientRepository.findByIdWithAllergens(id).get()
     }
 
     private fun saveAllergens(ingredient: Ingredient, allergens: List<IngredientAllergenRequest>) {
