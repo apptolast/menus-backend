@@ -12,6 +12,7 @@ import com.apptolast.menus.ingredient.repository.IngredientRepository
 import com.apptolast.menus.ingredient.service.IngredientService
 import com.apptolast.menus.shared.exception.ConflictException
 import com.apptolast.menus.shared.exception.ResourceNotFoundException
+import jakarta.persistence.EntityManager
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -23,7 +24,8 @@ import java.util.UUID
 class IngredientServiceImpl(
     private val ingredientRepository: IngredientRepository,
     private val ingredientAllergenRepository: IngredientAllergenRepository,
-    private val allergenRepository: AllergenRepository
+    private val allergenRepository: AllergenRepository,
+    private val entityManager: EntityManager
 ) : IngredientService {
 
     private val log = LoggerFactory.getLogger(IngredientServiceImpl::class.java)
@@ -52,6 +54,8 @@ class IngredientServiceImpl(
         if (allergens.isNotEmpty()) {
             saveAllergens(saved, allergens)
         }
+        entityManager.flush()
+        entityManager.clear()
         return ingredientRepository.findByIdWithAllergens(saved.id).get()
     }
 
@@ -74,6 +78,8 @@ class IngredientServiceImpl(
         }
 
         ingredientRepository.save(existing)
+        entityManager.flush()
+        entityManager.clear()
         return ingredientRepository.findByIdWithAllergens(id).get()
     }
 
@@ -113,6 +119,8 @@ class IngredientServiceImpl(
 
         ingredient.updatedAt = OffsetDateTime.now()
         ingredientRepository.save(ingredient)
+        entityManager.flush()
+        entityManager.clear()
         return ingredientRepository.findByIdWithAllergens(id).get()
     }
 
