@@ -9,12 +9,12 @@ import java.util.UUID
 interface IngredientRepository : JpaRepository<Ingredient, UUID> {
     fun existsByName(name: String): Boolean
 
-    @Query("SELECT DISTINCT i FROM Ingredient i LEFT JOIN FETCH i.allergens")
+    @Query("SELECT DISTINCT i FROM Ingredient i LEFT JOIN FETCH i.allergens ia LEFT JOIN FETCH ia.allergen")
     fun findAllWithAllergens(): List<Ingredient>
 
-    @Query("SELECT i FROM Ingredient i LEFT JOIN FETCH i.allergens WHERE i.id = :id")
+    @Query("SELECT i FROM Ingredient i LEFT JOIN FETCH i.allergens ia LEFT JOIN FETCH ia.allergen WHERE i.id = :id")
     fun findByIdWithAllergens(id: UUID): Optional<Ingredient>
 
-    @Query("SELECT DISTINCT i FROM Ingredient i LEFT JOIN FETCH i.allergens WHERE LOWER(i.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    @Query("SELECT DISTINCT i FROM Ingredient i LEFT JOIN FETCH i.allergens ia LEFT JOIN FETCH ia.allergen WHERE LOWER(i.name) LIKE LOWER(CONCAT('%', :name, '%'))")
     fun searchByName(name: String): List<Ingredient>
 }
