@@ -69,7 +69,13 @@ class DishServiceImpl(
         dish.displayOrder = request.displayOrder
         dish.updatedAt = OffsetDateTime.now()
         dishRepository.save(dish)
-        return dish.toResponse(null)
+
+        dishAllergenRepository.deleteByDishId(id)
+        request.allergens.forEach { allergenReq ->
+            saveAllergen(dish, allergenReq)
+        }
+
+        return dishRepository.findById(dish.id).get().toResponse(null)
     }
 
     override fun delete(id: UUID) {

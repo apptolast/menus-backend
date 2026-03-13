@@ -40,7 +40,7 @@ class IngredientServiceImpl(
     }
 
     @Transactional
-    override fun create(ingredient: Ingredient): Ingredient {
+    override fun create(ingredient: Ingredient, allergens: List<IngredientAllergenRequest>): Ingredient {
         log.info("Creating ingredient '{}'", ingredient.name)
         if (ingredientRepository.existsByName(ingredient.name)) {
             throw ConflictException(
@@ -48,11 +48,15 @@ class IngredientServiceImpl(
                 message = "Ingredient with name '${ingredient.name}' already exists"
             )
         }
-        return ingredientRepository.save(ingredient)
+        val saved = ingredientRepository.save(ingredient)
+        if (allergens.isNotEmpty()) {
+            saveAllergens(saved, allergens)
+        }
+        return ingredientRepository.findById(saved.id).get()
     }
 
     @Transactional
-    override fun update(id: UUID, ingredient: Ingredient): Ingredient {
+    override fun update(id: UUID, ingredient: Ingredient, allergens: List<IngredientAllergenRequest>?): Ingredient {
         log.info("Updating ingredient {}", id)
         val existing = ingredientRepository.findById(id)
             .orElseThrow { ResourceNotFoundException(message = "Ingredient with id $id not found") }
@@ -61,7 +65,16 @@ class IngredientServiceImpl(
         existing.brand = ingredient.brand
         existing.labelInfo = ingredient.labelInfo
         existing.updatedAt = OffsetDateTime.now()
-        return ingredientRepository.save(existing)
+
+        if (allergens != null) {
+            ingredientAllergenRepository.deleteByIngredientId(id)
+            if (allergens.isNotEmpty()) {
+                saveAllergens(existing, allergens)
+            }
+        }
+
+        ingredientRepository.save(existing)
+        return ingredientRepository.findById(id).get()
     }
 
     @Transactional
@@ -70,7 +83,7 @@ class IngredientServiceImpl(
         if (!ingredientRepository.existsById(id)) {
             throw ResourceNotFoundException(message = "Ingredient with id $id not found")
         }
-        ingredientAllergenRepository.deleteAll(ingredientAllergenRepository.findByIngredientId(id))
+        ingredientAllergenRepository.deleteByIngredientId(id)
         ingredientRepository.deleteById(id)
     }
 
@@ -93,8 +106,17 @@ class IngredientServiceImpl(
         val ingredient = ingredientRepository.findById(id)
             .orElseThrow { ResourceNotFoundException(message = "Ingredient with id $id not found") }
 
-        ingredientAllergenRepository.deleteAll(ingredientAllergenRepository.findByIngredientId(id))
+        ingredientAllergenRepository.deleteByIngredientId(id)
+        if (allergens.isNotEmpty()) {
+            saveAllergens(ingredient, allergens)
+        }
 
+        ingredient.updatedAt = OffsetDateTime.now()
+        ingredientRepository.save(ingredient)
+        return ingredientRepository.findById(id).get()
+    }
+
+    private fun saveAllergens(ingredient: Ingredient, allergens: List<IngredientAllergenRequest>) {
         val newAllergens = allergens.map { request ->
             val allergen = allergenRepository.findByCode(request.allergenCode)
                 ?: throw ResourceNotFoundException(message = "Allergen with code '${request.allergenCode}' not found")
@@ -106,12 +128,6 @@ class IngredientServiceImpl(
                 }
             IngredientAllergen(ingredient = ingredient, allergen = allergen, containmentLevel = level)
         }
-
-        if (newAllergens.isNotEmpty()) {
-            ingredientAllergenRepository.saveAll(newAllergens)
-        }
-
-        ingredient.updatedAt = OffsetDateTime.now()
-        return ingredientRepository.save(ingredient)
+        ingredientAllergenRepository.saveAll(newAllergens)
     }
 }

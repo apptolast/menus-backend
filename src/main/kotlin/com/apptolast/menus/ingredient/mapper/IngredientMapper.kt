@@ -7,7 +7,7 @@ import com.apptolast.menus.ingredient.dto.response.IngredientResponse
 import com.apptolast.menus.ingredient.model.entity.Ingredient
 import com.apptolast.menus.ingredient.model.entity.IngredientAllergen
 
-fun Ingredient.toResponse(allergens: List<IngredientAllergen> = emptyList()): IngredientResponse = IngredientResponse(
+fun Ingredient.toResponse(): IngredientResponse = IngredientResponse(
     id = id,
     name = name,
     description = description,

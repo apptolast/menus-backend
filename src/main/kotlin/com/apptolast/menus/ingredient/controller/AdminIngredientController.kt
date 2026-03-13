@@ -48,7 +48,7 @@ class AdminIngredientController(
         ResponseEntity.ok(ingredientService.findById(id).toResponse())
 
     @PostMapping
-    @Operation(summary = "Create an ingredient")
+    @Operation(summary = "Create an ingredient with allergens")
     @ApiResponses(
         ApiResponse(responseCode = "201", description = "Ingredient created"),
         ApiResponse(responseCode = "400", description = "Validation failed"),
@@ -57,10 +57,11 @@ class AdminIngredientController(
     fun createIngredient(
         @Valid @RequestBody request: CreateIngredientRequest
     ): ResponseEntity<IngredientResponse> =
-        ResponseEntity.status(HttpStatus.CREATED).body(ingredientService.create(request.toEntity()).toResponse())
+        ResponseEntity.status(HttpStatus.CREATED)
+            .body(ingredientService.create(request.toEntity(), request.allergens).toResponse())
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update an ingredient")
+    @Operation(summary = "Update an ingredient with allergens")
     @ApiResponses(
         ApiResponse(responseCode = "200", description = "Ingredient updated"),
         ApiResponse(responseCode = "400", description = "Validation failed"),
@@ -72,7 +73,7 @@ class AdminIngredientController(
     ): ResponseEntity<IngredientResponse> {
         val existing = ingredientService.findById(id)
         val updated = request.applyTo(existing)
-        return ResponseEntity.ok(ingredientService.update(id, updated).toResponse())
+        return ResponseEntity.ok(ingredientService.update(id, updated, request.allergens).toResponse())
     }
 
     @DeleteMapping("/{id}")

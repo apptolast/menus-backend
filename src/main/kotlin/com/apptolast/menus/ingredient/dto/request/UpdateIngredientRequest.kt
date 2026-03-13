@@ -11,5 +11,7 @@ data class UpdateIngredientRequest(
     @field:Size(max = 255, message = "Brand must not exceed 255 characters")
     val brand: String? = null,
 
-    val labelInfo: String? = null
+    val labelInfo: String? = null,
+
+    val allergens: List<IngredientAllergenRequest>? = null
 )

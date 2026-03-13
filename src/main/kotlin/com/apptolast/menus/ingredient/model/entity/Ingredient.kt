@@ -26,5 +26,8 @@ class Ingredient(
     val createdAt: OffsetDateTime = OffsetDateTime.now(),
 
     @Column(name = "updated_at", nullable = false)
-    var updatedAt: OffsetDateTime = OffsetDateTime.now()
+    var updatedAt: OffsetDateTime = OffsetDateTime.now(),
+
+    @OneToMany(mappedBy = "ingredient", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    val allergens: MutableList<IngredientAllergen> = mutableListOf()
 )
