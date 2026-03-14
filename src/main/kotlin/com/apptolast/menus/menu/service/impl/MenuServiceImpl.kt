@@ -28,9 +28,9 @@ class MenuServiceImpl(
     @Transactional(readOnly = true)
     override fun findByRestaurant(restaurantId: UUID, includeArchived: Boolean): List<MenuResponse> {
         val menus = if (includeArchived)
-            menuRepository.findByRestaurantId(restaurantId)
+            menuRepository.findByRestaurantIdWithSections(restaurantId)
         else
-            menuRepository.findByRestaurantIdAndArchivedFalse(restaurantId)
+            menuRepository.findByRestaurantIdAndArchivedFalseWithSections(restaurantId)
         return menus.map { it.toResponse() }
     }
 

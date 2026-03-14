@@ -10,7 +10,7 @@ import java.util.UUID
 
 interface IngredientAllergenRepository : JpaRepository<IngredientAllergen, IngredientAllergenId> {
 
-    @Query("SELECT ia FROM IngredientAllergen ia WHERE ia.ingredient.id = :ingredientId")
+    @Query("SELECT ia FROM IngredientAllergen ia JOIN FETCH ia.allergen WHERE ia.ingredient.id = :ingredientId")
     fun findByIngredientId(@Param("ingredientId") ingredientId: UUID): List<IngredientAllergen>
 
     @Modifying

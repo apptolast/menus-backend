@@ -40,7 +40,7 @@ class FavoriteController(
     fun listFavorites(
         @AuthenticationPrincipal principal: UserPrincipal
     ): ResponseEntity<List<FavoriteRestaurantResponse>> {
-        val favorites = userFavoriteRestaurantRepository.findByUserId(principal.userId)
+        val favorites = userFavoriteRestaurantRepository.findByUserIdWithRestaurant(principal.userId)
         return ResponseEntity.ok(favorites.map { it.toResponse() })
     }
 

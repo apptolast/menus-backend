@@ -25,7 +25,7 @@ class FavoriteRestaurantServiceImpl(
 
     override fun getFavorites(userId: UUID): List<RestaurantResponse> {
         log.info("Getting favorite restaurants for user {}", userId)
-        return userFavoriteRestaurantRepository.findByUserId(userId)
+        return userFavoriteRestaurantRepository.findByUserIdWithRestaurant(userId)
             .map { it.restaurant.toResponse() }
     }
 

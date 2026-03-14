@@ -11,6 +11,7 @@ import com.apptolast.menus.recipe.service.ComputedAllergen
 import com.apptolast.menus.recipe.service.RecipeIngredientInput
 import com.apptolast.menus.recipe.service.RecipeService
 import com.apptolast.menus.shared.exception.ResourceNotFoundException
+import jakarta.persistence.EntityManager
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -23,19 +24,20 @@ class RecipeServiceImpl(
     private val recipeRepository: RecipeRepository,
     private val recipeIngredientRepository: RecipeIngredientRepository,
     private val ingredientRepository: IngredientRepository,
-    private val ingredientAllergenRepository: IngredientAllergenRepository
+    private val ingredientAllergenRepository: IngredientAllergenRepository,
+    private val entityManager: EntityManager
 ) : RecipeService {
 
     private val log = LoggerFactory.getLogger(RecipeServiceImpl::class.java)
 
     override fun findAllByRestaurant(restaurantId: UUID): List<Recipe> {
         log.info("Listing recipes for restaurant {}", restaurantId)
-        return recipeRepository.findByRestaurantId(restaurantId)
+        return recipeRepository.findByRestaurantIdWithIngredients(restaurantId)
     }
 
     override fun findById(id: UUID): Recipe {
         log.info("Finding recipe {}", id)
-        return recipeRepository.findById(id)
+        return recipeRepository.findByIdWithIngredients(id)
             .orElseThrow { ResourceNotFoundException(message = "Recipe with id $id not found") }
     }
 
@@ -57,8 +59,11 @@ class RecipeServiceImpl(
         if (recipeIngredients.isNotEmpty()) {
             recipeIngredientRepository.saveAll(recipeIngredients)
         }
+        entityManager.flush()
+        entityManager.clear()
         log.info("Recipe '{}' created with id {}", savedRecipe.name, savedRecipe.id)
-        return savedRecipe
+        return recipeRepository.findByIdWithIngredients(savedRecipe.id)
+            .orElseThrow { ResourceNotFoundException(message = "Recipe with id ${savedRecipe.id} not found") }
     }
 
     @Transactional
@@ -90,12 +95,16 @@ class RecipeServiceImpl(
             }
         }
 
-        return recipeRepository.save(existing)
+        recipeRepository.save(existing)
+        entityManager.flush()
+        entityManager.clear()
+        return recipeRepository.findByIdWithIngredients(id)
+            .orElseThrow { ResourceNotFoundException(message = "Recipe with id $id not found") }
     }
 
     override fun computeAllergens(recipeId: UUID): List<ComputedAllergen> {
         log.info("Computing allergens for recipe {}", recipeId)
-        val recipeIngredients = recipeIngredientRepository.findByRecipeId(recipeId)
+        val recipeIngredients = recipeIngredientRepository.findByRecipeIdWithIngredient(recipeId)
 
         // Map: allergenCode -> Pair(allergen entity, highest containment level)
         data class AllergenEntry(val id: Int, val code: String, val name: String, val level: ContainmentLevel)
