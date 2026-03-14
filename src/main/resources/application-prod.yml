@@ -21,3 +21,9 @@ server:
   error:
     include-stacktrace: never
     include-message: never
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
