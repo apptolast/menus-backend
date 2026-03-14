@@ -6,7 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 data class AppConfig(
     val jwt: JwtProperties = JwtProperties(),
     val cors: CorsProperties = CorsProperties(),
-    val google: GoogleProperties = GoogleProperties()
+    val google: GoogleProperties = GoogleProperties(),
+    val upload: UploadProperties = UploadProperties()
 ) {
     data class JwtProperties(
         val secret: String = "",
@@ -20,5 +21,11 @@ data class AppConfig(
 
     data class GoogleProperties(
         val clientId: String = ""
+    )
+
+    data class UploadProperties(
+        val dir: String = "/data/uploads",
+        val maxSizeMb: Long = 5,
+        val allowedTypes: List<String> = listOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")
     )
 }

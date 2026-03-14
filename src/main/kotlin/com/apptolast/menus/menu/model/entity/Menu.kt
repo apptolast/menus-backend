@@ -34,6 +34,15 @@ class Menu(
     @Column(name = "updated_at", nullable = false)
     var updatedAt: OffsetDateTime = OffsetDateTime.now(),
 
-    @OneToMany(mappedBy = "menu", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
-    val sections: MutableList<MenuSection> = mutableListOf()
+    @OneToMany(mappedBy = "menu", cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
+    val sections: MutableList<MenuSection> = mutableListOf(),
+
+    @Column(name = "restaurant_logo_url", length = 500)
+    var restaurantLogoUrl: String? = null,
+
+    @Column(name = "company_logo_url", length = 500)
+    var companyLogoUrl: String? = null,
+
+    @OneToMany(mappedBy = "menu", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
+    val menuRecipes: MutableSet<MenuRecipe> = mutableSetOf()
 )

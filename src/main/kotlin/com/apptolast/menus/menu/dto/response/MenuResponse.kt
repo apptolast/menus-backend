@@ -11,5 +11,8 @@ data class MenuResponse(
     val archived: Boolean,
     val displayOrder: Int,
     val sections: List<SectionResponse> = emptyList(),
+    val restaurantLogoUrl: String? = null,
+    val companyLogoUrl: String? = null,
+    val recipes: List<MenuRecipeResponse> = emptyList(),
     val updatedAt: OffsetDateTime
 )

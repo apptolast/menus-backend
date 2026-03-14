@@ -3,6 +3,7 @@ package com.apptolast.menus.menu.controller
 import com.apptolast.menus.menu.dto.request.MenuRequest
 import com.apptolast.menus.menu.dto.request.PublishRequest
 import com.apptolast.menus.menu.dto.request.SectionRequest
+import com.apptolast.menus.menu.dto.request.UpdateMenuRecipesRequest
 import com.apptolast.menus.menu.dto.response.MenuResponse
 import com.apptolast.menus.menu.dto.response.SectionResponse
 import com.apptolast.menus.menu.service.MenuService
@@ -115,4 +116,16 @@ class AdminMenuController(
         menuService.deleteSection(sectionId)
         return ResponseEntity.noContent().build()
     }
+
+    @PutMapping("/api/v1/admin/menus/{id}/recipes")
+    @Operation(summary = "Update recipes assigned to a menu")
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Recipes updated"),
+        ApiResponse(responseCode = "404", description = "Menu or recipe not found")
+    )
+    fun updateMenuRecipes(
+        @PathVariable id: UUID,
+        @Valid @RequestBody request: UpdateMenuRecipesRequest
+    ): ResponseEntity<MenuResponse> =
+        ResponseEntity.ok(menuService.updateRecipes(id, request.recipeIds))
 }

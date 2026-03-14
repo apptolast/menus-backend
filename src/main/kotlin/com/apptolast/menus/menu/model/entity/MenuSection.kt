@@ -9,7 +9,7 @@ class MenuSection(
     @Id
     val id: UUID = UUID.randomUUID(),
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "menu_id", nullable = false)
     val menu: Menu = Menu(),
 

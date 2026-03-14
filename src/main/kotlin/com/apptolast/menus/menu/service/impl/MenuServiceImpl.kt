@@ -2,13 +2,17 @@ package com.apptolast.menus.menu.service.impl
 
 import com.apptolast.menus.menu.dto.request.MenuRequest
 import com.apptolast.menus.menu.dto.request.SectionRequest
+import com.apptolast.menus.menu.dto.response.MenuRecipeResponse
 import com.apptolast.menus.menu.dto.response.MenuResponse
 import com.apptolast.menus.menu.dto.response.SectionResponse
 import com.apptolast.menus.menu.model.entity.Menu
+import com.apptolast.menus.menu.model.entity.MenuRecipe
 import com.apptolast.menus.menu.model.entity.MenuSection
+import com.apptolast.menus.menu.repository.MenuRecipeRepository
 import com.apptolast.menus.menu.repository.MenuRepository
 import com.apptolast.menus.menu.repository.MenuSectionRepository
 import com.apptolast.menus.menu.service.MenuService
+import com.apptolast.menus.recipe.repository.RecipeRepository
 import com.apptolast.menus.shared.exception.ResourceNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -20,7 +24,9 @@ import java.util.UUID
 @Transactional
 class MenuServiceImpl(
     private val menuRepository: MenuRepository,
-    private val menuSectionRepository: MenuSectionRepository
+    private val menuSectionRepository: MenuSectionRepository,
+    private val recipeRepository: RecipeRepository,
+    private val menuRecipeRepository: MenuRecipeRepository
 ) : MenuService {
 
     private val logger = LoggerFactory.getLogger(MenuServiceImpl::class.java)
@@ -35,21 +41,35 @@ class MenuServiceImpl(
     }
 
     override fun create(restaurantId: UUID, request: MenuRequest): MenuResponse {
+        logger.info("Creating menu '{}' for restaurant {}", request.name, restaurantId)
         val menu = Menu(
             restaurantId = restaurantId,
             name = request.name,
             description = request.description,
-            displayOrder = request.displayOrder
+            displayOrder = request.displayOrder,
+            restaurantLogoUrl = request.restaurantLogoUrl,
+            companyLogoUrl = request.companyLogoUrl
         )
-        return menuRepository.save(menu).toResponse()
+        val saved = menuRepository.save(menu)
+        if (!request.recipeIds.isNullOrEmpty()) {
+            syncRecipes(saved, request.recipeIds)
+            menuRepository.save(saved)
+        }
+        return saved.toResponse()
     }
 
     override fun update(id: UUID, request: MenuRequest): MenuResponse {
+        logger.info("Updating menu {}", id)
         val menu = findMenuOrThrow(id)
         menu.name = request.name
         menu.description = request.description
         menu.displayOrder = request.displayOrder
+        menu.restaurantLogoUrl = request.restaurantLogoUrl
+        menu.companyLogoUrl = request.companyLogoUrl
         menu.updatedAt = OffsetDateTime.now()
+        if (request.recipeIds != null) {
+            syncRecipes(menu, request.recipeIds)
+        }
         return menuRepository.save(menu).toResponse()
     }
 
@@ -96,6 +116,27 @@ class MenuServiceImpl(
         return menuRepository.save(menu).toResponse()
     }
 
+    override fun updateRecipes(menuId: UUID, recipeIds: List<UUID>): MenuResponse {
+        logger.info("Updating recipes for menu {}: {} recipe(s)", menuId, recipeIds.size)
+        val menu = findMenuOrThrow(menuId)
+        syncRecipes(menu, recipeIds)
+        menu.updatedAt = OffsetDateTime.now()
+        return menuRepository.save(menu).toResponse()
+    }
+
+    private fun syncRecipes(menu: Menu, recipeIds: List<UUID>) {
+        val recipes = recipeRepository.findAllById(recipeIds)
+        if (recipes.size != recipeIds.size) {
+            val found = recipes.map { it.id }.toSet()
+            val missing = recipeIds.filter { it !in found }
+            throw ResourceNotFoundException("RECIPE_NOT_FOUND", "Recipes not found: $missing")
+        }
+        menu.menuRecipes.clear()
+        recipes.forEach { recipe ->
+            menu.menuRecipes.add(MenuRecipe(menu = menu, recipe = recipe))
+        }
+    }
+
     private fun findMenuOrThrow(id: UUID): Menu =
         menuRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("MENU_NOT_FOUND", "Menu not found") }
@@ -108,6 +149,9 @@ class MenuServiceImpl(
         archived = archived,
         displayOrder = displayOrder,
         sections = sections.map { it.toResponse() },
+        restaurantLogoUrl = restaurantLogoUrl,
+        companyLogoUrl = companyLogoUrl,
+        recipes = menuRecipes.map { MenuRecipeResponse(id = it.recipe.id, name = it.recipe.name) },
         updatedAt = updatedAt
     )
 

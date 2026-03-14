@@ -16,12 +16,12 @@ data class DishAllergenId(
 @IdClass(DishAllergenId::class)
 class DishAllergen(
     @Id
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "dish_id", nullable = false)
     val dish: Dish = Dish(),
 
     @Id
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "allergen_id", nullable = false)
     val allergen: Allergen = Allergen(),
 

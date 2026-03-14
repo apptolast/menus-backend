@@ -38,6 +38,7 @@ class SecurityConfig(
                         "/api/v1/auth/oauth2/google/callback"
                     ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/allergens", "/api/v1/allergens/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                     .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
                     .requestMatchers(
                         "/swagger-ui/**",

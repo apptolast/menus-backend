@@ -16,12 +16,12 @@ data class UserFavoriteRestaurantId(
 @IdClass(UserFavoriteRestaurantId::class)
 class UserFavoriteRestaurant(
     @Id
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     val user: UserAccount = UserAccount(),
 
     @Id
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "restaurant_id", nullable = false)
     val restaurant: Restaurant = Restaurant(),
 

@@ -15,4 +15,5 @@ interface MenuService {
     fun updateSection(sectionId: UUID, request: SectionRequest): SectionResponse
     fun deleteSection(sectionId: UUID)
     fun publish(menuId: UUID, published: Boolean): MenuResponse
+    fun updateRecipes(menuId: UUID, recipeIds: List<UUID>): MenuResponse
 }

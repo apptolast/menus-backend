@@ -13,11 +13,11 @@ class Dish(
     @Id
     val id: UUID = UUID.randomUUID(),
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "section_id", nullable = false)
     val section: MenuSection = MenuSection(),
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "recipe_id")
     var recipe: Recipe? = null,
 
@@ -45,6 +45,6 @@ class Dish(
     @Column(name = "updated_at", nullable = false)
     var updatedAt: OffsetDateTime = OffsetDateTime.now(),
 
-    @OneToMany(mappedBy = "dish", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "dish", cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
     val allergens: MutableList<DishAllergen> = mutableListOf()
 )
