@@ -11,7 +11,7 @@ FROM eclipse-temurin:21-jre-alpine AS runtime
 WORKDIR /app
 RUN addgroup -S menus && adduser -S menus -G menus
 COPY --from=builder /app/build/libs/*.jar app.jar
-RUN chown menus:menus app.jar
+RUN mkdir -p /app/uploads && chown -R menus:menus /app app.jar
 USER menus
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \

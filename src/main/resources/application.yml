@@ -43,7 +43,7 @@ app:
   google:
     client-id: ${GOOGLE_CLIENT_ID:placeholder}
   upload:
-    dir: ${UPLOAD_DIR:/data/uploads}
+    dir: ${UPLOAD_DIR:/app/uploads}
     max-size-mb: 5
 
 management:
