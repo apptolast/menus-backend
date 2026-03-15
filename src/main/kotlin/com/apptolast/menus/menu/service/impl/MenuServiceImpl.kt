@@ -46,7 +46,7 @@ class MenuServiceImpl(
             restaurantId = restaurantId,
             name = request.name,
             description = request.description,
-            displayOrder = request.displayOrder,
+            displayOrder = request.displayOrder ?: 0,
             restaurantLogoUrl = request.restaurantLogoUrl,
             companyLogoUrl = request.companyLogoUrl
         )
@@ -62,7 +62,7 @@ class MenuServiceImpl(
         val menu = findMenuOrThrow(id)
         menu.name = request.name
         menu.description = request.description
-        menu.displayOrder = request.displayOrder
+        menu.displayOrder = request.displayOrder ?: 0
         menu.restaurantLogoUrl = request.restaurantLogoUrl
         menu.companyLogoUrl = request.companyLogoUrl
         menu.updatedAt = OffsetDateTime.now()
@@ -85,7 +85,7 @@ class MenuServiceImpl(
         val section = MenuSection(
             menu = menu,
             name = request.name,
-            displayOrder = request.displayOrder
+            displayOrder = request.displayOrder ?: 0
         )
         return menuSectionRepository.save(section).toResponse()
     }
@@ -94,7 +94,7 @@ class MenuServiceImpl(
         val section = menuSectionRepository.findById(sectionId)
             .orElseThrow { ResourceNotFoundException("SECTION_NOT_FOUND", "Menu section not found") }
         section.name = request.name
-        section.displayOrder = request.displayOrder
+        section.displayOrder = request.displayOrder ?: 0
         return menuSectionRepository.save(section).toResponse()
     }
 
