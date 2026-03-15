@@ -53,7 +53,6 @@ class MenuServiceImpl(
         val saved = menuRepository.save(menu)
         if (!request.recipeIds.isNullOrEmpty()) {
             syncRecipes(saved, request.recipeIds)
-            menuRepository.save(saved)
         }
         return saved.toResponse()
     }
@@ -131,10 +130,11 @@ class MenuServiceImpl(
             val missing = recipeIds.filter { it !in found }
             throw ResourceNotFoundException("RECIPE_NOT_FOUND", "Recipes not found: $missing")
         }
+        menuRecipeRepository.deleteByMenuId(menu.id)
         menu.menuRecipes.clear()
-        recipes.forEach { recipe ->
-            menu.menuRecipes.add(MenuRecipe(menu = menu, recipe = recipe))
-        }
+        val newRecipes = recipes.map { recipe -> MenuRecipe(menu = menu, recipe = recipe) }
+        menuRecipeRepository.saveAll(newRecipes)
+        menu.menuRecipes.addAll(newRecipes)
     }
 
     private fun findMenuOrThrow(id: UUID): Menu =

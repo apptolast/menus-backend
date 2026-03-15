@@ -7,12 +7,12 @@ import java.util.UUID
 
 interface MenuRepository : JpaRepository<Menu, UUID> {
 
-    @Query("SELECT DISTINCT m FROM Menu m LEFT JOIN FETCH m.sections LEFT JOIN FETCH m.menuRecipes mr LEFT JOIN FETCH mr.recipe WHERE m.restaurantId = :restaurantId")
+    @Query("SELECT DISTINCT m FROM Menu m LEFT JOIN FETCH m.sections WHERE m.restaurantId = :restaurantId")
     fun findByRestaurantIdWithSections(restaurantId: UUID): List<Menu>
 
-    @Query("SELECT DISTINCT m FROM Menu m LEFT JOIN FETCH m.sections LEFT JOIN FETCH m.menuRecipes mr LEFT JOIN FETCH mr.recipe WHERE m.restaurantId = :restaurantId AND m.archived = false")
+    @Query("SELECT DISTINCT m FROM Menu m LEFT JOIN FETCH m.sections WHERE m.restaurantId = :restaurantId AND m.archived = false")
     fun findByRestaurantIdAndArchivedFalseWithSections(restaurantId: UUID): List<Menu>
 
-    @Query("SELECT DISTINCT m FROM Menu m LEFT JOIN FETCH m.sections LEFT JOIN FETCH m.menuRecipes mr LEFT JOIN FETCH mr.recipe WHERE m.restaurantId = :restaurantId AND m.published = true AND m.archived = false")
+    @Query("SELECT DISTINCT m FROM Menu m LEFT JOIN FETCH m.sections WHERE m.restaurantId = :restaurantId AND m.published = true AND m.archived = false")
     fun findByRestaurantIdAndPublishedTrueAndArchivedFalseWithSections(restaurantId: UUID): List<Menu>
 }
