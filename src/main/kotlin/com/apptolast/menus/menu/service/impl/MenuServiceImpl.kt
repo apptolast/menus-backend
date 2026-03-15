@@ -51,10 +51,10 @@ class MenuServiceImpl(
             companyLogoUrl = request.companyLogoUrl
         )
         val saved = menuRepository.save(menu)
-        if (!request.recipeIds.isNullOrEmpty()) {
+        val menuRecipes = if (!request.recipeIds.isNullOrEmpty()) {
             syncRecipes(saved, request.recipeIds)
-        }
-        return saved.toResponse()
+        } else emptyList()
+        return saved.toResponse(menuRecipes)
     }
 
     override fun update(id: UUID, request: MenuRequest): MenuResponse {
@@ -66,10 +66,11 @@ class MenuServiceImpl(
         menu.restaurantLogoUrl = request.restaurantLogoUrl
         menu.companyLogoUrl = request.companyLogoUrl
         menu.updatedAt = OffsetDateTime.now()
-        if (request.recipeIds != null) {
+        val menuRecipes = if (request.recipeIds != null) {
             syncRecipes(menu, request.recipeIds)
-        }
-        return menuRepository.save(menu).toResponse()
+        } else menuRecipeRepository.findByMenuId(id)
+        val saved = menuRepository.save(menu)
+        return saved.toResponse(menuRecipes)
     }
 
     override fun archive(id: UUID) {
@@ -118,12 +119,13 @@ class MenuServiceImpl(
     override fun updateRecipes(menuId: UUID, recipeIds: List<UUID>): MenuResponse {
         logger.info("Updating recipes for menu {}: {} recipe(s)", menuId, recipeIds.size)
         val menu = findMenuOrThrow(menuId)
-        syncRecipes(menu, recipeIds)
+        val menuRecipes = syncRecipes(menu, recipeIds)
         menu.updatedAt = OffsetDateTime.now()
-        return menuRepository.save(menu).toResponse()
+        val saved = menuRepository.save(menu)
+        return saved.toResponse(menuRecipes)
     }
 
-    private fun syncRecipes(menu: Menu, recipeIds: List<UUID>) {
+    private fun syncRecipes(menu: Menu, recipeIds: List<UUID>): List<MenuRecipe> {
         val recipes = recipeRepository.findAllById(recipeIds)
         if (recipes.size != recipeIds.size) {
             val found = recipes.map { it.id }.toSet()
@@ -131,29 +133,31 @@ class MenuServiceImpl(
             throw ResourceNotFoundException("RECIPE_NOT_FOUND", "Recipes not found: $missing")
         }
         menuRecipeRepository.deleteByMenuId(menu.id)
-        menu.menuRecipes.clear()
+        menuRecipeRepository.flush()
         val newRecipes = recipes.map { recipe -> MenuRecipe(menu = menu, recipe = recipe) }
-        menuRecipeRepository.saveAll(newRecipes)
-        menu.menuRecipes.addAll(newRecipes)
+        return menuRecipeRepository.saveAll(newRecipes)
     }
 
     private fun findMenuOrThrow(id: UUID): Menu =
         menuRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("MENU_NOT_FOUND", "Menu not found") }
 
-    private fun Menu.toResponse() = MenuResponse(
-        id = id,
-        name = name,
-        description = description ?: "",
-        published = published,
-        archived = archived,
-        displayOrder = displayOrder,
-        sections = sections.map { it.toResponse() },
-        restaurantLogoUrl = restaurantLogoUrl,
-        companyLogoUrl = companyLogoUrl,
-        recipes = menuRecipes.map { MenuRecipeResponse(id = it.recipe.id, name = it.recipe.name) },
-        updatedAt = updatedAt
-    )
+    private fun Menu.toResponse(recipeOverrides: List<MenuRecipe>? = null): MenuResponse {
+        val recipesToUse = recipeOverrides ?: menuRecipes.toList()
+        return MenuResponse(
+            id = id,
+            name = name,
+            description = description ?: "",
+            published = published,
+            archived = archived,
+            displayOrder = displayOrder,
+            sections = sections.map { it.toResponse() },
+            restaurantLogoUrl = restaurantLogoUrl,
+            companyLogoUrl = companyLogoUrl,
+            recipes = recipesToUse.map { MenuRecipeResponse(id = it.recipe.id, name = it.recipe.name) },
+            updatedAt = updatedAt
+        )
+    }
 
     private fun MenuSection.toResponse() = SectionResponse(
         id = id,

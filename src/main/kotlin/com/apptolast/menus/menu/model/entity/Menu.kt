@@ -43,6 +43,6 @@ class Menu(
     @Column(name = "company_logo_url", length = 500)
     var companyLogoUrl: String? = null,
 
-    @OneToMany(mappedBy = "menu", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "menu", fetch = FetchType.EAGER)
     val menuRecipes: MutableSet<MenuRecipe> = mutableSetOf()
 )
