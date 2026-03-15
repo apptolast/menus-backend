@@ -77,9 +77,11 @@ class RecipeServiceImpl(
         existing.category = recipe.category
         existing.active = recipe.active
         existing.updatedAt = OffsetDateTime.now()
+        recipeRepository.save(existing)
 
         if (ingredientInputs != null) {
             recipeIngredientRepository.deleteByRecipeId(id)
+            entityManager.flush()
             val recipeIngredients = ingredientInputs.map { input ->
                 val ingredient = ingredientRepository.findById(input.ingredientId)
                     .orElseThrow { ResourceNotFoundException(message = "Ingredient with id ${input.ingredientId} not found") }
@@ -95,7 +97,6 @@ class RecipeServiceImpl(
             }
         }
 
-        recipeRepository.save(existing)
         entityManager.flush()
         entityManager.clear()
         return recipeRepository.findByIdWithIngredients(id)

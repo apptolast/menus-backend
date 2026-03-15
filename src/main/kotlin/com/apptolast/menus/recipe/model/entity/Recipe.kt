@@ -31,6 +31,6 @@ class Recipe(
     @Column(name = "updated_at", nullable = false)
     var updatedAt: OffsetDateTime = OffsetDateTime.now(),
 
-    @OneToMany(mappedBy = "recipe", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "recipe", fetch = FetchType.EAGER)
     val ingredients: MutableList<RecipeIngredient> = mutableListOf()
 )
