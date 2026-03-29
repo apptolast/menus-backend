@@ -126,16 +126,21 @@ class MenuServiceImpl(
     }
 
     private fun syncRecipes(menu: Menu, recipeIds: List<UUID>): List<MenuRecipe> {
+        if (recipeIds.isEmpty()) {
+            return menuRecipeRepository.findByMenuId(menu.id)
+        }
         val recipes = recipeRepository.findAllById(recipeIds)
         if (recipes.size != recipeIds.size) {
             val found = recipes.map { it.id }.toSet()
             val missing = recipeIds.filter { it !in found }
             throw ResourceNotFoundException("RECIPE_NOT_FOUND", "Recipes not found: $missing")
         }
-        menuRecipeRepository.deleteByMenuId(menu.id)
-        menuRecipeRepository.flush()
-        val newRecipes = recipes.map { recipe -> MenuRecipe(menu = menu, recipe = recipe) }
-        return menuRecipeRepository.saveAll(newRecipes)
+        val currentRecipeIds = menuRecipeRepository.findByMenuId(menu.id).map { it.recipe.id }.toSet()
+        val toAdd = recipes.filter { it.id !in currentRecipeIds }
+        if (toAdd.isNotEmpty()) {
+            menuRecipeRepository.saveAll(toAdd.map { recipe -> MenuRecipe(menu = menu, recipe = recipe) })
+        }
+        return menuRecipeRepository.findByMenuId(menu.id)
     }
 
     private fun findMenuOrThrow(id: UUID): Menu =

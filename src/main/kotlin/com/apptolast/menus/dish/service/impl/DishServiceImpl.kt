@@ -74,9 +74,20 @@ class DishServiceImpl(
         dish.updatedAt = OffsetDateTime.now()
         dishRepository.save(dish)
 
-        dishAllergenRepository.deleteByDishId(id)
-        request.allergens.forEach { allergenReq ->
-            saveAllergen(dish, allergenReq)
+        if (request.allergens.isNotEmpty()) {
+            val currentAllergens = dishAllergenRepository.findByDishId(id)
+            val currentAllergenCodes = currentAllergens.map { it.allergen.code }.toSet()
+
+            for (allergenReq in request.allergens) {
+                if (allergenReq.allergenCode in currentAllergenCodes) {
+                    val current = currentAllergens.first { it.allergen.code == allergenReq.allergenCode }
+                    current.containmentLevel = ContainmentLevel.valueOf(allergenReq.containmentLevel)
+                    current.notes = allergenReq.notes
+                    dishAllergenRepository.save(current)
+                } else {
+                    saveAllergen(dish, allergenReq)
+                }
+            }
         }
 
         entityManager.flush()
