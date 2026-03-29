@@ -62,19 +62,9 @@ jobs:
       - name: Determine API URL
         id: api-url
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            ENV="${{ github.event.inputs.environment }}"
-          elif [ "${{ github.event.workflow_run.head_branch }}" = "main" ]; then
-            ENV="prod"
-          else
-            ENV="dev"
-          fi
-
-          if [ "$ENV" = "prod" ]; then
-            echo "url=${{ env.API_URL_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "url=${{ env.API_URL_DEV }}" >> $GITHUB_OUTPUT
-          fi
+          # Only dev environment is deployed for now; use dev URL always
+          ENV="dev"
+          echo "url=${{ env.API_URL_DEV }}" >> $GITHUB_OUTPUT
           echo "env=$ENV" >> $GITHUB_OUTPUT
 
       - name: Wait for API deployment
