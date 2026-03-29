@@ -1,0 +1,84 @@
+name: CI — Build & Test
+
+on:
+  push:
+    branches:
+      - develop
+      - 'feature/**'
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: menusdb_test
+          POSTGRES_USER: menus_test
+          POSTGRES_PASSWORD: menus_test
+        options: >-
+          --health-cmd "pg_isready -U menus_test -d menusdb_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build (skip tests)
+        run: ./gradlew build -x test --no-daemon
+
+      - name: Run tests
+        run: ./gradlew test --no-daemon
+        env:
+          DATABASE_URL: jdbc:postgresql://localhost:5432/menusdb_test
+          DATABASE_USERNAME: menus_test
+          DATABASE_PASSWORD: menus_test
+          JWT_SECRET: ci-test-secret-key-minimum-64-bytes-long-for-hs512-algorithm
+          ENCRYPTION_KEY: ci-test-encryption-32bytes!!!
+          CORS_ORIGINS: http://localhost:3000
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: build/reports/tests/test/
+
+      - name: Quality gate — No TODOs in production code
+        run: |
+          COUNT=$(grep -r "TODO\|FIXME\|HACK" src/main/ --include="*.kt" 2>/dev/null | wc -l)
+          if [ "$COUNT" -gt 0 ]; then
+            echo "FAILED: Found $COUNT TODO/FIXME/HACK in production code"
+            grep -r "TODO\|FIXME\|HACK" src/main/ --include="*.kt"
+            exit 1
+          fi
+          echo "OK: No TODOs in production code"
+
+      - name: Quality gate — No hardcoded secrets
+        run: |
+          COUNT=$(grep -r -i --include="*.kt" --include="*.yml" -E '(secret|password)\s*[:=]\s*"[^$\{][^"]{10,}"' src/ 2>/dev/null | grep -v "test\|//\|CHANGE_ME\|placeholder" | wc -l)
+          if [ "$COUNT" -gt 0 ]; then
+            echo "FAILED: Potential hardcoded secrets found"
+            exit 1
+          fi
+          echo "OK: No hardcoded secrets"

@@ -1,0 +1,28 @@
+# Traefik middleware for rate limiting and security headers
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: menus-ratelimit
+  namespace: apptolast-menus-dev
+spec:
+  rateLimit:
+    average: 100
+    burst: 200
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: menus-security-headers
+  namespace: apptolast-menus-dev
+spec:
+  headers:
+    frameDeny: true
+    browserXssFilter: true
+    contentTypeNosniff: true
+    forceSTSHeader: true
+    stsSeconds: 31536000
+    stsIncludeSubdomains: true
+    customResponseHeaders:
+      X-Content-Type-Options: "nosniff"
+      X-Frame-Options: "DENY"
+      Referrer-Policy: "strict-origin-when-cross-origin"

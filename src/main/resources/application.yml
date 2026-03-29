@@ -1,6 +1,10 @@
 spring:
   application:
     name: menus-backend
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/menusdb}
     username: ${DATABASE_USERNAME:menus}
@@ -13,7 +17,6 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         default_schema: public
         jdbc:
           batch_size: 20
@@ -35,10 +38,13 @@ app:
     secret: ${JWT_SECRET:dev-secret-key-minimum-64-bytes-long-change-in-production-please}
     access-expiration: 900
     refresh-expiration: 604800
-  encryption:
-    key: ${ENCRYPTION_KEY:dev-encryption-key-32bytes!}
   cors:
     allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:placeholder}
+  upload:
+    dir: ${UPLOAD_DIR:./uploads}
+    max-size-mb: 5
 
 management:
   endpoints:
@@ -48,6 +54,13 @@ management:
   endpoint:
     health:
       show-details: when_authorized
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
 
 server:
   port: ${PORT:8080}

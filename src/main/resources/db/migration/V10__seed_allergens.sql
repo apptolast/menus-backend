@@ -1,0 +1,15 @@
+INSERT INTO allergens (id, code, name_es, name_en, display_order) VALUES
+(1,  'GLUTEN',      'Gluten',                          'Gluten',                          1),
+(2,  'CRUSTACEANS',  'Crustáceos',                      'Crustaceans',                     2),
+(3,  'EGGS',         'Huevos',                          'Eggs',                            3),
+(4,  'FISH',         'Pescado',                         'Fish',                            4),
+(5,  'PEANUTS',      'Cacahuetes',                      'Peanuts',                         5),
+(6,  'SOYA',         'Soja',                            'Soybeans',                        6),
+(7,  'MILK',         'Leche',                           'Milk',                            7),
+(8,  'TREE_NUTS',    'Frutos de cáscara',               'Tree nuts',                       8),
+(9,  'CELERY',       'Apio',                            'Celery',                          9),
+(10, 'MUSTARD',      'Mostaza',                         'Mustard',                         10),
+(11, 'SESAME',       'Sésamo',                          'Sesame seeds',                    11),
+(12, 'SULPHITES',    'Dióxido de azufre y sulfitos',    'Sulphur dioxide and sulphites',   12),
+(13, 'LUPIN',        'Altramuces',                      'Lupin',                           13),
+(14, 'MOLLUSCS',     'Moluscos',                        'Molluscs',                        14);

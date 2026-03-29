@@ -27,6 +27,14 @@ repositories {
     mavenCentral()
 }
 
+val testcontainersVersion = "1.21.4"
+
+dependencyManagement {
+    imports {
+        mavenBom("org.testcontainers:testcontainers-bom:$testcontainersVersion")
+    }
+}
+
 dependencies {
     // Spring Boot starters
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -42,7 +50,7 @@ dependencies {
 
     // Database
     runtimeOnly("org.postgresql:postgresql")
-    implementation("org.flywaydb:flyway-core")
+    implementation("org.springframework.boot:spring-boot-starter-flyway")
     implementation("org.flywaydb:flyway-database-postgresql")
 
     // JWT
@@ -78,4 +86,9 @@ kotlin {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+        events("passed", "failed", "skipped")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
 }

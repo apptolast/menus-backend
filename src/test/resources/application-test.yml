@@ -1,0 +1,30 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: public
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+app:
+  upload:
+    dir: ${java.io.tmpdir}/menus-test-uploads
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-client-id
+            client-secret: test-client-secret
+
+logging:
+  level:
+    com.apptolast.menus: DEBUG
+    org.springframework.security: DEBUG
