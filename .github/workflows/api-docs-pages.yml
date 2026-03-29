@@ -17,6 +17,7 @@ on:
   push:
     branches:
       - develop
+      - main
     paths:
       - 'src/main/kotlin/**'
       - 'src/main/resources/application*.yml'
@@ -171,6 +172,7 @@ jobs:
   deploy-pages:
     name: Deploy to GitHub Pages
     needs: generate-docs
+    if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
 
     permissions:
