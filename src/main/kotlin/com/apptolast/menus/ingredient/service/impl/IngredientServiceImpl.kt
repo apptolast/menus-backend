@@ -70,10 +70,23 @@ class IngredientServiceImpl(
         existing.labelInfo = ingredient.labelInfo
         existing.updatedAt = OffsetDateTime.now()
 
-        if (allergens != null) {
-            ingredientAllergenRepository.deleteByIngredientId(id)
-            if (allergens.isNotEmpty()) {
-                saveAllergens(existing, allergens)
+        if (!allergens.isNullOrEmpty()) {
+            val currentAllergens = ingredientAllergenRepository.findByIngredientId(id)
+            val currentAllergenCodes = currentAllergens.map { it.allergen.code }.toSet()
+
+            for (request in allergens) {
+                if (request.allergenCode in currentAllergenCodes) {
+                    val current = currentAllergens.first { it.allergen.code == request.allergenCode }
+                    current.containmentLevel = ContainmentLevel.valueOf(request.containmentLevel)
+                    ingredientAllergenRepository.save(current)
+                } else {
+                    val allergen = allergenRepository.findByCode(request.allergenCode)
+                        ?: throw ResourceNotFoundException(message = "Allergen with code '${request.allergenCode}' not found")
+                    val level = ContainmentLevel.valueOf(request.containmentLevel)
+                    ingredientAllergenRepository.save(
+                        IngredientAllergen(ingredient = existing, allergen = allergen, containmentLevel = level)
+                    )
+                }
             }
         }
 
@@ -112,9 +125,24 @@ class IngredientServiceImpl(
         val ingredient = ingredientRepository.findById(id)
             .orElseThrow { ResourceNotFoundException(message = "Ingredient with id $id not found") }
 
-        ingredientAllergenRepository.deleteByIngredientId(id)
         if (allergens.isNotEmpty()) {
-            saveAllergens(ingredient, allergens)
+            val currentAllergens = ingredientAllergenRepository.findByIngredientId(id)
+            val currentAllergenCodes = currentAllergens.map { it.allergen.code }.toSet()
+
+            for (request in allergens) {
+                if (request.allergenCode in currentAllergenCodes) {
+                    val current = currentAllergens.first { it.allergen.code == request.allergenCode }
+                    current.containmentLevel = ContainmentLevel.valueOf(request.containmentLevel)
+                    ingredientAllergenRepository.save(current)
+                } else {
+                    val allergen = allergenRepository.findByCode(request.allergenCode)
+                        ?: throw ResourceNotFoundException(message = "Allergen with code '${request.allergenCode}' not found")
+                    val level = ContainmentLevel.valueOf(request.containmentLevel)
+                    ingredientAllergenRepository.save(
+                        IngredientAllergen(ingredient = ingredient, allergen = allergen, containmentLevel = level)
+                    )
+                }
+            }
         }
 
         ingredient.updatedAt = OffsetDateTime.now()

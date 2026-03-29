@@ -79,21 +79,28 @@ class RecipeServiceImpl(
         existing.updatedAt = OffsetDateTime.now()
         recipeRepository.save(existing)
 
-        if (ingredientInputs != null) {
-            recipeIngredientRepository.deleteByRecipeId(id)
-            entityManager.flush()
-            val recipeIngredients = ingredientInputs.map { input ->
-                val ingredient = ingredientRepository.findById(input.ingredientId)
-                    .orElseThrow { ResourceNotFoundException(message = "Ingredient with id ${input.ingredientId} not found") }
-                RecipeIngredient(
-                    recipe = existing,
-                    ingredient = ingredient,
-                    quantity = input.quantity,
-                    unit = input.unit
-                )
-            }
-            if (recipeIngredients.isNotEmpty()) {
-                recipeIngredientRepository.saveAll(recipeIngredients)
+        if (!ingredientInputs.isNullOrEmpty()) {
+            val currentIngredients = recipeIngredientRepository.findByRecipeIdWithIngredient(id)
+            val currentIngredientIds = currentIngredients.map { it.ingredient.id }.toSet()
+
+            for (input in ingredientInputs) {
+                if (input.ingredientId in currentIngredientIds) {
+                    val current = currentIngredients.first { it.ingredient.id == input.ingredientId }
+                    current.quantity = input.quantity
+                    current.unit = input.unit
+                    recipeIngredientRepository.save(current)
+                } else {
+                    val ingredient = ingredientRepository.findById(input.ingredientId)
+                        .orElseThrow { ResourceNotFoundException(message = "Ingredient with id ${input.ingredientId} not found") }
+                    recipeIngredientRepository.save(
+                        RecipeIngredient(
+                            recipe = existing,
+                            ingredient = ingredient,
+                            quantity = input.quantity,
+                            unit = input.unit
+                        )
+                    )
+                }
             }
         }
 
