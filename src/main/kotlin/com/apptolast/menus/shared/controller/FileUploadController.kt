@@ -21,8 +21,8 @@ import org.springframework.web.multipart.MultipartFile
 class FileUploadController(
     private val fileStorageService: FileStorageService
 ) {
-    @PostMapping("/upload", consumes = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Upload a file (image)")
+    @PostMapping("/upload", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    @Operation(summary = "Upload a file (JSON)")
     fun upload(@RequestParam("file") file: MultipartFile): ResponseEntity<UploadResponse> {
         val url = fileStorageService.store(file)
         return ResponseEntity.status(HttpStatus.CREATED).body(UploadResponse(url = url))
