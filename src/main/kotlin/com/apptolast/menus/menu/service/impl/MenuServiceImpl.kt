@@ -128,22 +128,13 @@ class MenuServiceImpl(
     }
 
     private fun syncRecipes(menu: Menu, recipeIds: List<UUID>): List<MenuRecipe> {
-        // Delete all current assignments first (PUT = full replacement)
+        // PUT = full replacement: delete all, then add requested
         menuRecipeRepository.deleteByMenuId(menu.id)
-
-        // Flush the DELETE to the DB and clear the stale entities from JPA cache.
-        // Without this, saveAll() calls merge() on stale cached MenuRecipe objects
-        // instead of persist(), silently losing the new associations.
         entityManager.flush()
-        entityManager.clear()
 
         if (recipeIds.isEmpty()) {
             return emptyList()
         }
-
-        // Re-fetch menu after clear (it was detached by entityManager.clear())
-        val freshMenu = menuRepository.findById(menu.id)
-            .orElseThrow { ResourceNotFoundException("MENU_NOT_FOUND", "Menu not found") }
 
         val recipes = recipeRepository.findAllById(recipeIds)
         if (recipes.size != recipeIds.size) {
@@ -152,8 +143,10 @@ class MenuServiceImpl(
             throw ResourceNotFoundException("RECIPE_NOT_FOUND", "Recipes not found: $missing")
         }
 
+        // MenuRecipe uses UUID PK (not composite key), so isNew()=true and persist() is used.
+        // No flush/clear needed between delete and save.
         return menuRecipeRepository.saveAll(
-            recipes.map { recipe -> MenuRecipe(menu = freshMenu, recipe = recipe) }
+            recipes.map { recipe -> MenuRecipe(menu = menu, recipe = recipe) }
         )
     }
 

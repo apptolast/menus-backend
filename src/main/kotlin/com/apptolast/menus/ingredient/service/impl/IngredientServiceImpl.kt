@@ -82,16 +82,13 @@ class IngredientServiceImpl(
         ingredientRepository.save(existing)
 
         if (request.allergens != null) {
+            // PUT semantics: full replacement
             ingredientAllergenRepository.deleteByIngredientId(id)
-
-            // Flush DELETE to DB and clear stale entities from JPA cache
             entityManager.flush()
-            entityManager.clear()
 
             if (request.allergens.isNotEmpty()) {
-                val freshIngredient = ingredientRepository.findById(id)
-                    .orElseThrow { ResourceNotFoundException(message = "Ingredient with id $id not found") }
-                saveAllergensBatch(freshIngredient, request.allergens)
+                // IngredientAllergen uses UUID PK, so isNew()=true and persist() is used
+                saveAllergensBatch(existing, request.allergens)
             }
         }
 
@@ -127,18 +124,16 @@ class IngredientServiceImpl(
         ingredientRepository.findById(id)
             .orElseThrow { ResourceNotFoundException(message = "Ingredient with id $id not found") }
 
+        // PUT semantics: full replacement
         ingredientAllergenRepository.deleteByIngredientId(id)
-
-        // Flush DELETE to DB and clear stale entities from JPA cache
         entityManager.flush()
-        entityManager.clear()
 
         if (allergens.isNotEmpty()) {
-            val freshIngredient = ingredientRepository.findById(id)
+            val ingredient = ingredientRepository.findById(id)
                 .orElseThrow { ResourceNotFoundException(message = "Ingredient with id $id not found") }
-            saveAllergensBatch(freshIngredient, allergens)
-            freshIngredient.updatedAt = OffsetDateTime.now()
-            ingredientRepository.save(freshIngredient)
+            saveAllergensBatch(ingredient, allergens)
+            ingredient.updatedAt = OffsetDateTime.now()
+            ingredientRepository.save(ingredient)
         }
 
         return flushClearAndLoad(id)

@@ -114,11 +114,9 @@ class RecipeServiceImpl(
         recipeRepository.save(existing)
 
         if (request.ingredients != null) {
+            // PUT semantics: full replacement
             recipeIngredientRepository.deleteByRecipeId(id)
-
-            // Flush DELETE to DB and clear stale entities from JPA cache
             entityManager.flush()
-            entityManager.clear()
 
             if (request.ingredients.isNotEmpty()) {
                 // Batch fetch all ingredients in one query
@@ -131,11 +129,10 @@ class RecipeServiceImpl(
                 }
                 val ingredientMap = ingredients.associateBy { it.id }
 
-                val freshRecipe = recipeRepository.findById(id)
-                    .orElseThrow { ResourceNotFoundException(message = "Recipe with id $id not found") }
+                // RecipeIngredient uses UUID PK, so isNew()=true and persist() is used
                 val newIngredients = request.ingredients.map { input ->
                     RecipeIngredient(
-                        recipe = freshRecipe,
+                        recipe = existing,
                         ingredient = ingredientMap[input.ingredientId]!!,
                         quantity = input.quantity,
                         unit = input.unit
