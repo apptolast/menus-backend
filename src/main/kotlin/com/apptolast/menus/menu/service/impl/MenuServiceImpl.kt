@@ -14,6 +14,7 @@ import com.apptolast.menus.menu.repository.MenuSectionRepository
 import com.apptolast.menus.menu.service.MenuService
 import com.apptolast.menus.recipe.repository.RecipeRepository
 import com.apptolast.menus.shared.exception.ResourceNotFoundException
+import jakarta.persistence.EntityManager
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -26,7 +27,8 @@ class MenuServiceImpl(
     private val menuRepository: MenuRepository,
     private val menuSectionRepository: MenuSectionRepository,
     private val recipeRepository: RecipeRepository,
-    private val menuRecipeRepository: MenuRecipeRepository
+    private val menuRecipeRepository: MenuRecipeRepository,
+    private val entityManager: EntityManager
 ) : MenuService {
 
     private val logger = LoggerFactory.getLogger(MenuServiceImpl::class.java)
@@ -129,9 +131,19 @@ class MenuServiceImpl(
         // Delete all current assignments first (PUT = full replacement)
         menuRecipeRepository.deleteByMenuId(menu.id)
 
+        // Flush the DELETE to the DB and clear the stale entities from JPA cache.
+        // Without this, saveAll() calls merge() on stale cached MenuRecipe objects
+        // instead of persist(), silently losing the new associations.
+        entityManager.flush()
+        entityManager.clear()
+
         if (recipeIds.isEmpty()) {
             return emptyList()
         }
+
+        // Re-fetch menu after clear (it was detached by entityManager.clear())
+        val freshMenu = menuRepository.findById(menu.id)
+            .orElseThrow { ResourceNotFoundException("MENU_NOT_FOUND", "Menu not found") }
 
         val recipes = recipeRepository.findAllById(recipeIds)
         if (recipes.size != recipeIds.size) {
@@ -141,7 +153,7 @@ class MenuServiceImpl(
         }
 
         return menuRecipeRepository.saveAll(
-            recipes.map { recipe -> MenuRecipe(menu = menu, recipe = recipe) }
+            recipes.map { recipe -> MenuRecipe(menu = freshMenu, recipe = recipe) }
         )
     }
 

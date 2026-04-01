@@ -105,12 +105,21 @@ class RecipeServiceImpl(
             // PUT semantics: full replacement of ingredients
             recipeIngredientRepository.deleteByRecipeId(id)
 
+            // Flush DELETE to DB and clear stale entities from JPA cache.
+            // Without this, saveAll() calls merge() on stale cached RecipeIngredient
+            // (same composite key) instead of persist(), silently losing data.
+            entityManager.flush()
+            entityManager.clear()
+
             if (request.ingredients.isNotEmpty()) {
+                // Re-fetch recipe after clear (detached by entityManager.clear())
+                val freshRecipe = recipeRepository.findById(id)
+                    .orElseThrow { ResourceNotFoundException(message = "Recipe with id $id not found") }
                 val newIngredients = request.ingredients.map { input ->
                     val ingredient = ingredientRepository.findById(input.ingredientId)
                         .orElseThrow { ResourceNotFoundException(message = "Ingredient with id ${input.ingredientId} not found") }
                     RecipeIngredient(
-                        recipe = existing,
+                        recipe = freshRecipe,
                         ingredient = ingredient,
                         quantity = input.quantity,
                         unit = input.unit

@@ -81,16 +81,26 @@ class IngredientServiceImpl(
         request.brand?.let { existing.brand = it }
         request.labelInfo?.let { existing.labelInfo = it }
         existing.updatedAt = OffsetDateTime.now()
+        ingredientRepository.save(existing)
 
         if (request.allergens != null) {
             // PUT semantics: full replacement of allergens
             ingredientAllergenRepository.deleteByIngredientId(id)
+
+            // Flush DELETE to DB and clear stale entities from JPA cache.
+            // Without this, saveAll() calls merge() on stale cached IngredientAllergen
+            // (same composite key) instead of persist(), silently losing data.
+            entityManager.flush()
+            entityManager.clear()
+
             if (request.allergens.isNotEmpty()) {
-                saveAllergens(existing, request.allergens)
+                // Re-fetch ingredient after clear (detached by entityManager.clear())
+                val freshIngredient = ingredientRepository.findById(id)
+                    .orElseThrow { ResourceNotFoundException(message = "Ingredient with id $id not found") }
+                saveAllergens(freshIngredient, request.allergens)
             }
         }
 
-        ingredientRepository.save(existing)
         entityManager.flush()
         entityManager.clear()
         return ingredientRepository.findByIdWithAllergens(id).get().toResponse()
@@ -127,12 +137,20 @@ class IngredientServiceImpl(
 
         // PUT semantics: full replacement
         ingredientAllergenRepository.deleteByIngredientId(id)
+
+        // Flush DELETE to DB and clear stale entities from JPA cache
+        entityManager.flush()
+        entityManager.clear()
+
         if (allergens.isNotEmpty()) {
-            saveAllergens(ingredient, allergens)
+            // Re-fetch ingredient after clear (detached by entityManager.clear())
+            val freshIngredient = ingredientRepository.findById(id)
+                .orElseThrow { ResourceNotFoundException(message = "Ingredient with id $id not found") }
+            saveAllergens(freshIngredient, allergens)
+            freshIngredient.updatedAt = OffsetDateTime.now()
+            ingredientRepository.save(freshIngredient)
         }
 
-        ingredient.updatedAt = OffsetDateTime.now()
-        ingredientRepository.save(ingredient)
         entityManager.flush()
         entityManager.clear()
         return ingredientRepository.findByIdWithAllergens(id).get().toResponse()
