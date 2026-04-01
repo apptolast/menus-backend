@@ -5,10 +5,7 @@ import com.apptolast.menus.recipe.dto.request.UpdateRecipeRequest
 import com.apptolast.menus.recipe.dto.response.ComputedAllergenResponse
 import com.apptolast.menus.recipe.dto.response.RecipeResponse
 import com.apptolast.menus.recipe.dto.response.RecipeSummaryResponse
-import com.apptolast.menus.recipe.mapper.toEntity
 import com.apptolast.menus.recipe.mapper.toResponse
-import com.apptolast.menus.recipe.mapper.toSummaryResponse
-import com.apptolast.menus.recipe.service.RecipeIngredientInput
 import com.apptolast.menus.recipe.service.RecipeService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -37,13 +34,8 @@ class AdminRecipeController(
     )
     fun listRecipes(
         @PathVariable restaurantId: UUID
-    ): ResponseEntity<List<RecipeSummaryResponse>> {
-        val recipes = recipeService.findAllByRestaurant(restaurantId)
-        return ResponseEntity.ok(recipes.map { recipe ->
-            val allergenCount = recipeService.computeAllergens(recipe.id).size
-            recipe.toSummaryResponse(allergenCount)
-        })
-    }
+    ): ResponseEntity<List<RecipeSummaryResponse>> =
+        ResponseEntity.ok(recipeService.findAllByRestaurant(restaurantId))
 
     @GetMapping("/api/v1/admin/recipes/{id}")
     @Operation(summary = "Get recipe with computed allergens")
@@ -52,11 +44,8 @@ class AdminRecipeController(
         ApiResponse(responseCode = "401", description = "Unauthorized"),
         ApiResponse(responseCode = "404", description = "Recipe not found")
     )
-    fun getRecipe(@PathVariable id: UUID): ResponseEntity<RecipeResponse> {
-        val recipe = recipeService.findById(id)
-        val allergens = recipeService.computeAllergens(recipe.id)
-        return ResponseEntity.ok(recipe.toResponse(allergens))
-    }
+    fun getRecipe(@PathVariable id: UUID): ResponseEntity<RecipeResponse> =
+        ResponseEntity.ok(recipeService.findById(id))
 
     @PostMapping("/api/v1/admin/restaurants/{restaurantId}/recipes")
     @Operation(summary = "Create a recipe with ingredients")
@@ -67,15 +56,8 @@ class AdminRecipeController(
     )
     fun createRecipe(
         @Valid @RequestBody request: CreateRecipeRequest
-    ): ResponseEntity<RecipeResponse> {
-        val recipe = request.toEntity()
-        val inputs = request.ingredients.map {
-            RecipeIngredientInput(ingredientId = it.ingredientId, quantity = it.quantity, unit = it.unit)
-        }
-        val saved = recipeService.create(recipe, inputs)
-        val allergens = recipeService.computeAllergens(saved.id)
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved.toResponse(allergens))
-    }
+    ): ResponseEntity<RecipeResponse> =
+        ResponseEntity.status(HttpStatus.CREATED).body(recipeService.create(request))
 
     @PutMapping("/api/v1/admin/recipes/{id}")
     @Operation(summary = "Update a recipe")
@@ -87,20 +69,8 @@ class AdminRecipeController(
     fun updateRecipe(
         @PathVariable id: UUID,
         @Valid @RequestBody request: UpdateRecipeRequest
-    ): ResponseEntity<RecipeResponse> {
-        val existing = recipeService.findById(id)
-        request.name?.let { existing.name = it }
-        request.description?.let { existing.description = it }
-        request.category?.let { existing.category = it }
-        request.price?.let { existing.price = it }
-        request.active?.let { existing.active = it }
-        val inputs = request.ingredients?.map {
-            RecipeIngredientInput(ingredientId = it.ingredientId, quantity = it.quantity, unit = it.unit)
-        }
-        val saved = recipeService.update(id, existing, inputs)
-        val allergens = recipeService.computeAllergens(saved.id)
-        return ResponseEntity.ok(saved.toResponse(allergens))
-    }
+    ): ResponseEntity<RecipeResponse> =
+        ResponseEntity.ok(recipeService.update(id, request))
 
     @DeleteMapping("/api/v1/admin/recipes/{id}")
     @Operation(summary = "Delete a recipe")
@@ -119,15 +89,6 @@ class AdminRecipeController(
         ApiResponse(responseCode = "200", description = "Computed allergens list"),
         ApiResponse(responseCode = "404", description = "Recipe not found")
     )
-    fun getRecipeAllergens(@PathVariable id: UUID): ResponseEntity<List<ComputedAllergenResponse>> {
-        recipeService.findById(id)
-        return ResponseEntity.ok(recipeService.computeAllergens(id).map {
-            ComputedAllergenResponse(
-                allergenId = it.allergenId,
-                allergenCode = it.allergenCode,
-                allergenName = it.allergenName,
-                containmentLevel = it.containmentLevel
-            )
-        })
-    }
+    fun getRecipeAllergens(@PathVariable id: UUID): ResponseEntity<List<ComputedAllergenResponse>> =
+        ResponseEntity.ok(recipeService.computeAllergens(id).map { it.toResponse() })
 }

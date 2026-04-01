@@ -5,9 +5,6 @@ import com.apptolast.menus.ingredient.dto.request.IngredientAllergenRequest
 import com.apptolast.menus.ingredient.dto.request.UpdateIngredientRequest
 import com.apptolast.menus.ingredient.dto.response.IngredientAllergenResponse
 import com.apptolast.menus.ingredient.dto.response.IngredientResponse
-import com.apptolast.menus.ingredient.mapper.applyTo
-import com.apptolast.menus.ingredient.mapper.toEntity
-import com.apptolast.menus.ingredient.mapper.toResponse
 import com.apptolast.menus.ingredient.service.IngredientService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -36,7 +33,7 @@ class AdminIngredientController(
         ApiResponse(responseCode = "403", description = "Forbidden")
     )
     fun listIngredients(): ResponseEntity<List<IngredientResponse>> =
-        ResponseEntity.ok(ingredientService.findAll().map { it.toResponse() })
+        ResponseEntity.ok(ingredientService.findAll())
 
     @GetMapping("/{id}")
     @Operation(summary = "Get ingredient by ID")
@@ -45,7 +42,7 @@ class AdminIngredientController(
         ApiResponse(responseCode = "404", description = "Ingredient not found")
     )
     fun getIngredient(@PathVariable id: UUID): ResponseEntity<IngredientResponse> =
-        ResponseEntity.ok(ingredientService.findById(id).toResponse())
+        ResponseEntity.ok(ingredientService.findById(id))
 
     @PostMapping
     @Operation(summary = "Create an ingredient with allergens")
@@ -57,8 +54,7 @@ class AdminIngredientController(
     fun createIngredient(
         @Valid @RequestBody request: CreateIngredientRequest
     ): ResponseEntity<IngredientResponse> =
-        ResponseEntity.status(HttpStatus.CREATED)
-            .body(ingredientService.create(request.toEntity(), request.allergens).toResponse())
+        ResponseEntity.status(HttpStatus.CREATED).body(ingredientService.create(request))
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an ingredient with allergens")
@@ -70,11 +66,8 @@ class AdminIngredientController(
     fun updateIngredient(
         @PathVariable id: UUID,
         @Valid @RequestBody request: UpdateIngredientRequest
-    ): ResponseEntity<IngredientResponse> {
-        val existing = ingredientService.findById(id)
-        val updated = request.applyTo(existing)
-        return ResponseEntity.ok(ingredientService.update(id, updated, request.allergens).toResponse())
-    }
+    ): ResponseEntity<IngredientResponse> =
+        ResponseEntity.ok(ingredientService.update(id, request))
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete an ingredient")
@@ -91,7 +84,7 @@ class AdminIngredientController(
     @Operation(summary = "Search ingredients by name")
     @ApiResponse(responseCode = "200", description = "Search results returned")
     fun searchIngredients(@RequestParam name: String): ResponseEntity<List<IngredientResponse>> =
-        ResponseEntity.ok(ingredientService.searchByName(name).map { it.toResponse() })
+        ResponseEntity.ok(ingredientService.searchByName(name))
 
     @GetMapping("/{id}/allergens")
     @Operation(summary = "Get allergens for an ingredient")
@@ -113,5 +106,5 @@ class AdminIngredientController(
         @PathVariable id: UUID,
         @Valid @RequestBody allergens: List<IngredientAllergenRequest>
     ): ResponseEntity<IngredientResponse> =
-        ResponseEntity.ok(ingredientService.setAllergens(id, allergens).toResponse())
+        ResponseEntity.ok(ingredientService.setAllergens(id, allergens))
 }

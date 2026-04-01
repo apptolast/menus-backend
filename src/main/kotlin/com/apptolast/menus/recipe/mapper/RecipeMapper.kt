@@ -1,6 +1,5 @@
 package com.apptolast.menus.recipe.mapper
 
-import com.apptolast.menus.recipe.dto.request.CreateRecipeRequest
 import com.apptolast.menus.recipe.dto.response.ComputedAllergenResponse
 import com.apptolast.menus.recipe.dto.response.RecipeIngredientResponse
 import com.apptolast.menus.recipe.dto.response.RecipeResponse
@@ -51,11 +50,3 @@ fun ComputedAllergen.toResponse(): ComputedAllergenResponse =
         containmentLevel = containmentLevel
     )
 
-fun CreateRecipeRequest.toEntity(): Recipe =
-    Recipe(
-        restaurantId = restaurantId,
-        name = name,
-        description = description,
-        category = category,
-        price = price
-    )

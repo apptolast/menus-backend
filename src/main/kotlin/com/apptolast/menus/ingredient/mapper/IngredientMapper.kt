@@ -1,7 +1,5 @@
 package com.apptolast.menus.ingredient.mapper
 
-import com.apptolast.menus.ingredient.dto.request.CreateIngredientRequest
-import com.apptolast.menus.ingredient.dto.request.UpdateIngredientRequest
 import com.apptolast.menus.ingredient.dto.response.IngredientAllergenResponse
 import com.apptolast.menus.ingredient.dto.response.IngredientResponse
 import com.apptolast.menus.ingredient.model.entity.Ingredient
@@ -24,18 +22,3 @@ fun IngredientAllergen.toAllergenResponse(): IngredientAllergenResponse = Ingred
     allergenName = allergen.nameEs,
     containmentLevel = containmentLevel.name
 )
-
-fun CreateIngredientRequest.toEntity(): Ingredient = Ingredient(
-    name = name,
-    description = description,
-    brand = brand,
-    labelInfo = labelInfo
-)
-
-fun UpdateIngredientRequest.applyTo(existing: Ingredient): Ingredient {
-    name?.let { existing.name = it }
-    description?.let { existing.description = it }
-    brand?.let { existing.brand = it }
-    labelInfo?.let { existing.labelInfo = it }
-    return existing
-}
