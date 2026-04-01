@@ -1,6 +1,7 @@
 package com.apptolast.menus.recipe.model.entity
 
 import jakarta.persistence.*
+import java.math.BigDecimal
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -21,6 +22,9 @@ class Recipe(
 
     @Column(name = "category", length = 100)
     var category: String? = null,
+
+    @Column(name = "price", precision = 10, scale = 2)
+    var price: BigDecimal? = null,
 
     @Column(name = "active", nullable = false)
     var active: Boolean = true,

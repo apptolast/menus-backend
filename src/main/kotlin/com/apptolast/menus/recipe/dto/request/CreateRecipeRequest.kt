@@ -1,8 +1,10 @@
 package com.apptolast.menus.recipe.dto.request
 
+import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
+import java.math.BigDecimal
 import java.util.UUID
 
 data class CreateRecipeRequest(
@@ -16,6 +18,9 @@ data class CreateRecipeRequest(
     val description: String? = null,
 
     val category: String? = null,
+
+    @field:DecimalMin(value = "0.00", message = "Price must be >= 0")
+    val price: BigDecimal? = null,
 
     val ingredients: List<RecipeIngredientRequest> = emptyList()
 )

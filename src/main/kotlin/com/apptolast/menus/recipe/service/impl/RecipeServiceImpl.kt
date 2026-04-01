@@ -75,6 +75,7 @@ class RecipeServiceImpl(
         existing.name = recipe.name
         existing.description = recipe.description
         existing.category = recipe.category
+        existing.price = recipe.price
         existing.active = recipe.active
         existing.updatedAt = OffsetDateTime.now()
         recipeRepository.save(existing)

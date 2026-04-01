@@ -1,5 +1,6 @@
 package com.apptolast.menus.recipe.dto.response
 
+import java.math.BigDecimal
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -9,6 +10,7 @@ data class RecipeResponse(
     val name: String,
     val description: String?,
     val category: String?,
+    val price: BigDecimal?,
     val active: Boolean,
     val ingredients: List<RecipeIngredientResponse> = emptyList(),
     val computedAllergens: List<ComputedAllergenResponse> = emptyList(),

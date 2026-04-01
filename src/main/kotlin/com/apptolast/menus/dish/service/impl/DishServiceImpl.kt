@@ -49,7 +49,6 @@ class DishServiceImpl(
                 section = section,
                 name = request.name,
                 description = request.description,
-                price = request.price,
                 imageUrl = request.imageUrl,
                 available = request.available,
                 displayOrder = request.displayOrder ?: 0
@@ -67,7 +66,6 @@ class DishServiceImpl(
         val dish = findDishOrThrow(id)
         dish.name = request.name
         dish.description = request.description
-        dish.price = request.price
         dish.imageUrl = request.imageUrl
         dish.available = request.available
         dish.displayOrder = request.displayOrder ?: 0
@@ -155,7 +153,7 @@ class DishServiceImpl(
             id = id,
             name = name,
             description = description ?: "",
-            price = price,
+            price = recipe?.price,
             sectionId = section.id,
             imageUrl = imageUrl,
             available = available,

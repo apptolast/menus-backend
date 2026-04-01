@@ -124,6 +124,7 @@ class DevDataSeeder(
         val croquetasRecipe = createRecipe(
             restaurant1, "Croquetas Ibericas del Puchero",
             "Croquetas cremosas de jamon iberico con bechamel casera", "Entrantes",
+            BigDecimal("12.50"),
             listOf(
                 ingredients["Harina de trigo"]!! to ("100" to "g"),
                 ingredients["Leche entera"]!! to ("500" to "ml"),
@@ -134,6 +135,7 @@ class DevDataSeeder(
         val bravasRecipe = createRecipe(
             restaurant1, "Patatas Rebeldes Bravas",
             "Patatas fritas con alioli casero y salsa brava picante", "Entrantes",
+            BigDecimal("8.00"),
             listOf(
                 ingredients["Patata"]!! to ("400" to "g"),
                 ingredients["Huevos frescos"]!! to ("1" to "unidades"),
@@ -144,6 +146,7 @@ class DevDataSeeder(
         val ensaladillaRecipe = createRecipe(
             restaurant1, "Ensaladilla Ekaterina",
             "Ensaladilla rusa con anchoas del Cantabrico", "Entrantes",
+            BigDecimal("9.50"),
             listOf(
                 ingredients["Patata"]!! to ("300" to "g"),
                 ingredients["Mayonesa comercial"]!! to ("100" to "g"),
@@ -154,6 +157,7 @@ class DevDataSeeder(
         val burrataRecipe = createRecipe(
             restaurant1, "Burrata Campana",
             "Burrata fresca con pesto de nueces y tomate cherry", "Principales",
+            BigDecimal("14.00"),
             listOf(
                 ingredients["Parmesano"]!! to ("30" to "g"),
                 ingredients["Nueces"]!! to ("40" to "g"),
@@ -164,6 +168,7 @@ class DevDataSeeder(
         val butifarraRecipe = createRecipe(
             restaurant1, "Butifarra Cordobesa a la Brasa",
             "Butifarra artesanal con huevo frito y mostaza antigua", "Principales",
+            BigDecimal("16.00"),
             listOf(
                 ingredients["Butifarra"]!! to ("200" to "g"),
                 ingredients["Huevos frescos"]!! to ("1" to "unidades"),
@@ -196,31 +201,31 @@ class DevDataSeeder(
         createDishWithAllergens(
             sectionEntrantes, croquetasRecipe,
             "Croquetas Ibericas del Puchero", "6 unidades de croquetas cremosas de jamon iberico",
-            BigDecimal("12.50"), 0, allergensByCode,
+            0, allergensByCode,
             mapOf("GLUTEN" to ContainmentLevel.CONTAINS, "MILK" to ContainmentLevel.CONTAINS, "EGGS" to ContainmentLevel.CONTAINS)
         )
         createDishWithAllergens(
             sectionEntrantes, bravasRecipe,
             "Patatas Rebeldes Bravas", "Patatas fritas crujientes con alioli casero y brava picante",
-            BigDecimal("8.00"), 1, allergensByCode,
+            1, allergensByCode,
             mapOf("EGGS" to ContainmentLevel.CONTAINS, "MUSTARD" to ContainmentLevel.CONTAINS)
         )
         createDishWithAllergens(
             sectionEntrantes, ensaladillaRecipe,
             "Ensaladilla Ekaterina", "Ensaladilla rusa con anchoas del Cantabrico y aceitunas",
-            BigDecimal("9.50"), 2, allergensByCode,
+            2, allergensByCode,
             mapOf("EGGS" to ContainmentLevel.CONTAINS, "FISH" to ContainmentLevel.CONTAINS)
         )
         createDishWithAllergens(
             sectionPrincipales, burrataRecipe,
             "Burrata Campana", "Burrata fresca con pesto de nueces y tomate cherry",
-            BigDecimal("14.00"), 0, allergensByCode,
+            0, allergensByCode,
             mapOf("MILK" to ContainmentLevel.CONTAINS, "TREE_NUTS" to ContainmentLevel.CONTAINS, "PEANUTS" to ContainmentLevel.MAY_CONTAIN)
         )
         createDishWithAllergens(
             sectionPrincipales, butifarraRecipe,
             "Butifarra Cordobesa a la Brasa", "Butifarra artesanal con huevo frito y mostaza antigua",
-            BigDecimal("16.00"), 1, allergensByCode,
+            1, allergensByCode,
             mapOf("EGGS" to ContainmentLevel.CONTAINS, "MUSTARD" to ContainmentLevel.CONTAINS)
         )
         logger.info("Created 5 dishes with allergen declarations")
@@ -298,6 +303,7 @@ class DevDataSeeder(
         name: String,
         description: String,
         category: String,
+        price: BigDecimal? = null,
         ingredientRefs: List<Pair<Ingredient, Pair<String, String>>>
     ): Recipe {
         val recipe = recipeRepository.save(
@@ -305,7 +311,8 @@ class DevDataSeeder(
                 restaurantId = restaurant.id,
                 name = name,
                 description = description,
-                category = category
+                category = category,
+                price = price
             )
         )
         ingredientRefs.forEach { (ingredient, qtyUnit) ->
@@ -326,7 +333,6 @@ class DevDataSeeder(
         recipe: Recipe?,
         name: String,
         description: String,
-        price: BigDecimal,
         displayOrder: Int,
         allergensByCode: Map<String, com.apptolast.menus.allergen.model.entity.Allergen>,
         allergenLevels: Map<String, ContainmentLevel>
@@ -337,7 +343,6 @@ class DevDataSeeder(
                 recipe = recipe,
                 name = name,
                 description = description,
-                price = price,
                 displayOrder = displayOrder
             )
         )

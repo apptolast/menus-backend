@@ -92,6 +92,7 @@ class AdminRecipeController(
         request.name?.let { existing.name = it }
         request.description?.let { existing.description = it }
         request.category?.let { existing.category = it }
+        request.price?.let { existing.price = it }
         request.active?.let { existing.active = it }
         val inputs = request.ingredients?.map {
             RecipeIngredientInput(ingredientId = it.ingredientId, quantity = it.quantity, unit = it.unit)

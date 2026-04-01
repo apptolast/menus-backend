@@ -16,6 +16,7 @@ fun Recipe.toResponse(computedAllergens: List<ComputedAllergen> = emptyList()): 
         name = name,
         description = description,
         category = category,
+        price = price,
         active = active,
         ingredients = ingredients.map { it.toIngredientResponse() },
         computedAllergens = computedAllergens.map { it.toResponse() },
@@ -28,6 +29,7 @@ fun Recipe.toSummaryResponse(allergenCount: Int = 0): RecipeSummaryResponse =
         id = id,
         name = name,
         category = category,
+        price = price,
         active = active,
         ingredientCount = ingredients.size,
         allergenCount = allergenCount
@@ -54,5 +56,6 @@ fun CreateRecipeRequest.toEntity(): Recipe =
         restaurantId = restaurantId,
         name = name,
         description = description,
-        category = category
+        category = category,
+        price = price
     )

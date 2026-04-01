@@ -3,7 +3,6 @@ package com.apptolast.menus.dish.model.entity
 import com.apptolast.menus.menu.model.entity.MenuSection
 import com.apptolast.menus.recipe.model.entity.Recipe
 import jakarta.persistence.*
-import java.math.BigDecimal
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -26,9 +25,6 @@ class Dish(
 
     @Column(name = "description", columnDefinition = "TEXT")
     var description: String? = null,
-
-    @Column(name = "price", precision = 8, scale = 2)
-    var price: BigDecimal? = null,
 
     @Column(name = "image_url", length = 500)
     var imageUrl: String? = null,
