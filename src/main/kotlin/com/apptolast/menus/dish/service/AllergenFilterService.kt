@@ -1,9 +1,9 @@
 package com.apptolast.menus.dish.service
 
-import com.apptolast.menus.dish.model.entity.DishAllergen
+import com.apptolast.menus.dish.dto.DishAllergenData
 import com.apptolast.menus.dish.model.enum.SafetyLevel
 
 interface AllergenFilterService {
-    fun computeSafetyLevel(dishAllergens: List<DishAllergen>, userAllergenCodes: List<String>): SafetyLevel
-    fun getMatchedAllergens(dishAllergens: List<DishAllergen>, userAllergenCodes: List<String>): List<String>
+    fun computeSafetyLevel(dishAllergens: List<DishAllergenData>, userAllergenCodes: List<String>): SafetyLevel
+    fun getMatchedAllergens(dishAllergens: List<DishAllergenData>, userAllergenCodes: List<String>): List<String>
 }

@@ -1,6 +1,7 @@
 package com.apptolast.menus.dish.service.impl
 
 import com.apptolast.menus.allergen.repository.AllergenRepository
+import com.apptolast.menus.dish.dto.DishAllergenData
 import com.apptolast.menus.dish.dto.request.DishAllergenRequest
 import com.apptolast.menus.dish.dto.request.DishRequest
 import com.apptolast.menus.dish.dto.response.DishAllergenResponse
@@ -143,11 +144,12 @@ class DishServiceImpl(
     }
 
     private fun Dish.toResponse(userAllergenCodes: List<String>?): DishResponse {
+        val allergenData = allergens.map { DishAllergenData(it.allergen.code, it.containmentLevel) }
         val safetyLevel = userAllergenCodes?.let {
-            allergenFilterService.computeSafetyLevel(allergens, it)
+            allergenFilterService.computeSafetyLevel(allergenData, it)
         }
         val matchedAllergens = userAllergenCodes?.let {
-            allergenFilterService.getMatchedAllergens(allergens, it)
+            allergenFilterService.getMatchedAllergens(allergenData, it)
         } ?: emptyList()
         return DishResponse(
             id = id,
