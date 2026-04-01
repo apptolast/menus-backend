@@ -55,12 +55,10 @@ class DishServiceImpl(
                 displayOrder = request.displayOrder ?: 0
             )
         )
-        request.allergens.forEach { allergenReq ->
-            saveAllergen(dish, allergenReq)
+        if (request.allergens.isNotEmpty()) {
+            saveAllergensBatch(dish, request.allergens)
         }
-        entityManager.flush()
-        entityManager.clear()
-        return dishRepository.findByIdWithAllergens(dish.id).get().toResponse(null)
+        return flushClearAndLoad(dish.id)
     }
 
     override fun update(id: UUID, request: DishRequest): DishResponse {
@@ -77,6 +75,12 @@ class DishServiceImpl(
             val currentAllergens = dishAllergenRepository.findByDishId(id)
             val currentAllergenCodes = currentAllergens.map { it.allergen.code }.toSet()
 
+            // Batch fetch all new allergen codes in one query
+            val newCodes = request.allergens.map { it.allergenCode }.filter { it !in currentAllergenCodes }
+            val newAllergenEntities = if (newCodes.isNotEmpty()) {
+                allergenRepository.findAllByCodeIn(newCodes).associateBy { it.code }
+            } else emptyMap()
+
             for (allergenReq in request.allergens) {
                 if (allergenReq.allergenCode in currentAllergenCodes) {
                     val current = currentAllergens.first { it.allergen.code == allergenReq.allergenCode }
@@ -84,14 +88,21 @@ class DishServiceImpl(
                     current.notes = allergenReq.notes
                     dishAllergenRepository.save(current)
                 } else {
-                    saveAllergen(dish, allergenReq)
+                    val allergen = newAllergenEntities[allergenReq.allergenCode]
+                        ?: throw ResourceNotFoundException("ALLERGEN_NOT_FOUND", "Allergen ${allergenReq.allergenCode} not found")
+                    dishAllergenRepository.save(
+                        DishAllergen(
+                            dish = dish,
+                            allergen = allergen,
+                            containmentLevel = ContainmentLevel.valueOf(allergenReq.containmentLevel),
+                            notes = allergenReq.notes
+                        )
+                    )
                 }
             }
         }
 
-        entityManager.flush()
-        entityManager.clear()
-        return dishRepository.findByIdWithAllergens(dish.id).get().toResponse(null)
+        return flushClearAndLoad(dish.id)
     }
 
     override fun delete(id: UUID) {
@@ -101,25 +112,19 @@ class DishServiceImpl(
         dishRepository.deleteById(id)
     }
 
-    override fun addAllergen(
-        dishId: UUID,
-        request: DishAllergenRequest
-    ): DishResponse {
+    override fun addAllergen(dishId: UUID, request: DishAllergenRequest): DishResponse {
         val dish = findDishOrThrow(dishId)
         val allergen = allergenRepository.findByCode(request.allergenCode)
             ?: throw ResourceNotFoundException("ALLERGEN_NOT_FOUND", "Allergen ${request.allergenCode} not found")
-        val containmentLevel = ContainmentLevel.valueOf(request.containmentLevel)
-
-        val dishAllergen = DishAllergen(
-            dish = dish,
-            allergen = allergen,
-            containmentLevel = containmentLevel,
-            notes = request.notes
+        dishAllergenRepository.save(
+            DishAllergen(
+                dish = dish,
+                allergen = allergen,
+                containmentLevel = ContainmentLevel.valueOf(request.containmentLevel),
+                notes = request.notes
+            )
         )
-        dishAllergenRepository.save(dishAllergen)
-        entityManager.flush()
-        entityManager.clear()
-        return dishRepository.findByIdWithAllergens(dishId).get().toResponse(null)
+        return flushClearAndLoad(dishId)
     }
 
     override fun removeAllergen(dishId: UUID, allergenId: Int) {
@@ -130,17 +135,30 @@ class DishServiceImpl(
         dishRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("DISH_NOT_FOUND", "Dish not found") }
 
-    private fun saveAllergen(dish: Dish, req: DishAllergenRequest) {
-        val allergen = allergenRepository.findByCode(req.allergenCode)
-            ?: throw ResourceNotFoundException("ALLERGEN_NOT_FOUND", "Allergen ${req.allergenCode} not found")
-        dishAllergenRepository.save(
+    private fun flushClearAndLoad(id: UUID): DishResponse {
+        entityManager.flush()
+        entityManager.clear()
+        return dishRepository.findByIdWithAllergens(id).get().toResponse(null)
+    }
+
+    private fun saveAllergensBatch(dish: Dish, allergens: List<DishAllergenRequest>) {
+        val codes = allergens.map { it.allergenCode }
+        val allergenEntities = allergenRepository.findAllByCodeIn(codes)
+        val allergenMap = allergenEntities.associateBy { it.code }
+
+        val missing = codes.filter { it !in allergenMap }
+        if (missing.isNotEmpty()) {
+            throw ResourceNotFoundException("ALLERGEN_NOT_FOUND", "Allergens not found: $missing")
+        }
+
+        dishAllergenRepository.saveAll(allergens.map { req ->
             DishAllergen(
                 dish = dish,
-                allergen = allergen,
+                allergen = allergenMap[req.allergenCode]!!,
                 containmentLevel = ContainmentLevel.valueOf(req.containmentLevel),
                 notes = req.notes
             )
-        )
+        })
     }
 
     private fun Dish.toResponse(userAllergenCodes: List<String>?): DishResponse {

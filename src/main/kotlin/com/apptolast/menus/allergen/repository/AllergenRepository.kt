@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface AllergenRepository : JpaRepository<Allergen, Int> {
     fun findByCode(code: String): Allergen?
+    fun findAllByCodeIn(codes: List<String>): List<Allergen>
 }

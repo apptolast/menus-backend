@@ -38,8 +38,17 @@ class RecipeServiceImpl(
     override fun findAllByRestaurant(restaurantId: UUID): List<RecipeSummaryResponse> {
         log.info("Listing recipes for restaurant {}", restaurantId)
         val recipes = recipeRepository.findByRestaurantIdWithIngredients(restaurantId)
+
+        // Batch: collect ALL ingredient IDs across ALL recipes, single query for allergens
+        val allIngredientIds = recipes.flatMap { it.ingredients.map { ri -> ri.ingredient.id } }.distinct()
+        val allergensByIngredient = if (allIngredientIds.isNotEmpty()) {
+            ingredientAllergenRepository.findByIngredientIdIn(allIngredientIds)
+                .groupBy { it.ingredient.id }
+        } else emptyMap()
+
         return recipes.map { recipe ->
-            val allergenCount = computeAllergens(recipe.id).size
+            val recipeIngredientIds = recipe.ingredients.map { it.ingredient.id }
+            val allergenCount = computeAllergensFromMap(recipeIngredientIds, allergensByIngredient).size
             recipe.toSummaryResponse(allergenCount)
         }
     }
@@ -64,27 +73,30 @@ class RecipeServiceImpl(
         )
         val savedRecipe = recipeRepository.save(recipe)
 
-        val recipeIngredients = request.ingredients.map { input ->
-            val ingredient = ingredientRepository.findById(input.ingredientId)
-                .orElseThrow { ResourceNotFoundException(message = "Ingredient with id ${input.ingredientId} not found") }
-            RecipeIngredient(
-                recipe = savedRecipe,
-                ingredient = ingredient,
-                quantity = input.quantity,
-                unit = input.unit
-            )
-        }
-        if (recipeIngredients.isNotEmpty()) {
+        if (request.ingredients.isNotEmpty()) {
+            // Batch fetch all ingredients in one query
+            val ingredientIds = request.ingredients.map { it.ingredientId }
+            val ingredients = ingredientRepository.findAllById(ingredientIds)
+            if (ingredients.size != ingredientIds.size) {
+                val found = ingredients.map { it.id }.toSet()
+                val missing = ingredientIds.filter { it !in found }
+                throw ResourceNotFoundException(message = "Ingredients not found: $missing")
+            }
+            val ingredientMap = ingredients.associateBy { it.id }
+
+            val recipeIngredients = request.ingredients.map { input ->
+                RecipeIngredient(
+                    recipe = savedRecipe,
+                    ingredient = ingredientMap[input.ingredientId]!!,
+                    quantity = input.quantity,
+                    unit = input.unit
+                )
+            }
             recipeIngredientRepository.saveAll(recipeIngredients)
         }
-        entityManager.flush()
-        entityManager.clear()
 
         log.info("Recipe '{}' created with id {}", savedRecipe.name, savedRecipe.id)
-        val saved = recipeRepository.findByIdWithIngredients(savedRecipe.id)
-            .orElseThrow { ResourceNotFoundException(message = "Recipe with id ${savedRecipe.id} not found") }
-        val allergens = computeAllergens(saved.id)
-        return saved.toResponse(allergens)
+        return flushClearAndLoad(savedRecipe.id)
     }
 
     @Transactional
@@ -102,25 +114,29 @@ class RecipeServiceImpl(
         recipeRepository.save(existing)
 
         if (request.ingredients != null) {
-            // PUT semantics: full replacement of ingredients
             recipeIngredientRepository.deleteByRecipeId(id)
 
-            // Flush DELETE to DB and clear stale entities from JPA cache.
-            // Without this, saveAll() calls merge() on stale cached RecipeIngredient
-            // (same composite key) instead of persist(), silently losing data.
+            // Flush DELETE to DB and clear stale entities from JPA cache
             entityManager.flush()
             entityManager.clear()
 
             if (request.ingredients.isNotEmpty()) {
-                // Re-fetch recipe after clear (detached by entityManager.clear())
+                // Batch fetch all ingredients in one query
+                val ingredientIds = request.ingredients.map { it.ingredientId }
+                val ingredients = ingredientRepository.findAllById(ingredientIds)
+                if (ingredients.size != ingredientIds.size) {
+                    val found = ingredients.map { it.id }.toSet()
+                    val missing = ingredientIds.filter { it !in found }
+                    throw ResourceNotFoundException(message = "Ingredients not found: $missing")
+                }
+                val ingredientMap = ingredients.associateBy { it.id }
+
                 val freshRecipe = recipeRepository.findById(id)
                     .orElseThrow { ResourceNotFoundException(message = "Recipe with id $id not found") }
                 val newIngredients = request.ingredients.map { input ->
-                    val ingredient = ingredientRepository.findById(input.ingredientId)
-                        .orElseThrow { ResourceNotFoundException(message = "Ingredient with id ${input.ingredientId} not found") }
                     RecipeIngredient(
                         recipe = freshRecipe,
-                        ingredient = ingredient,
+                        ingredient = ingredientMap[input.ingredientId]!!,
                         quantity = input.quantity,
                         unit = input.unit
                     )
@@ -129,23 +145,51 @@ class RecipeServiceImpl(
             }
         }
 
-        entityManager.flush()
-        entityManager.clear()
-        val updated = recipeRepository.findByIdWithIngredients(id)
-            .orElseThrow { ResourceNotFoundException(message = "Recipe with id $id not found") }
-        val allergens = computeAllergens(updated.id)
-        return updated.toResponse(allergens)
+        return flushClearAndLoad(id)
     }
 
     override fun computeAllergens(recipeId: UUID): List<ComputedAllergen> {
-        log.info("Computing allergens for recipe {}", recipeId)
+        log.debug("Computing allergens for recipe {}", recipeId)
         val recipeIngredients = recipeIngredientRepository.findByRecipeIdWithIngredient(recipeId)
+        val ingredientIds = recipeIngredients.map { it.ingredient.id }
 
+        if (ingredientIds.isEmpty()) return emptyList()
+
+        // Batch: single query for all ingredient allergens
+        val allergensByIngredient = ingredientAllergenRepository.findByIngredientIdIn(ingredientIds)
+            .groupBy { it.ingredient.id }
+
+        return computeAllergensFromMap(ingredientIds, allergensByIngredient)
+    }
+
+    @Transactional
+    override fun delete(id: UUID) {
+        log.info("Deleting recipe {}", id)
+        if (!recipeRepository.existsById(id)) {
+            throw ResourceNotFoundException(message = "Recipe with id $id not found")
+        }
+        recipeIngredientRepository.deleteByRecipeId(id)
+        recipeRepository.deleteById(id)
+    }
+
+    private fun flushClearAndLoad(id: UUID): RecipeResponse {
+        entityManager.flush()
+        entityManager.clear()
+        val recipe = recipeRepository.findByIdWithIngredients(id)
+            .orElseThrow { ResourceNotFoundException(message = "Recipe with id $id not found") }
+        val allergens = computeAllergens(recipe.id)
+        return recipe.toResponse(allergens)
+    }
+
+    private fun computeAllergensFromMap(
+        ingredientIds: List<UUID>,
+        allergensByIngredient: Map<UUID, List<com.apptolast.menus.ingredient.model.entity.IngredientAllergen>>
+    ): List<ComputedAllergen> {
         data class AllergenEntry(val id: Int, val code: String, val name: String, val level: ContainmentLevel)
         val allergenMap = mutableMapOf<String, AllergenEntry>()
 
-        for (ri in recipeIngredients) {
-            val ingredientAllergens = ingredientAllergenRepository.findByIngredientId(ri.ingredient.id)
+        for (ingredientId in ingredientIds) {
+            val ingredientAllergens = allergensByIngredient[ingredientId] ?: continue
             for (ia in ingredientAllergens) {
                 val code = ia.allergen.code
                 val existing = allergenMap[code]
@@ -168,15 +212,5 @@ class RecipeServiceImpl(
                 containmentLevel = entry.level.name
             )
         }
-    }
-
-    @Transactional
-    override fun delete(id: UUID) {
-        log.info("Deleting recipe {}", id)
-        if (!recipeRepository.existsById(id)) {
-            throw ResourceNotFoundException(message = "Recipe with id $id not found")
-        }
-        recipeIngredientRepository.deleteByRecipeId(id)
-        recipeRepository.deleteById(id)
     }
 }

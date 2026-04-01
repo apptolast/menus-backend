@@ -63,11 +63,9 @@ class IngredientServiceImpl(
         )
         val saved = ingredientRepository.save(ingredient)
         if (request.allergens.isNotEmpty()) {
-            saveAllergens(saved, request.allergens)
+            saveAllergensBatch(saved, request.allergens)
         }
-        entityManager.flush()
-        entityManager.clear()
-        return ingredientRepository.findByIdWithAllergens(saved.id).get().toResponse()
+        return flushClearAndLoad(saved.id)
     }
 
     @Transactional
@@ -84,26 +82,20 @@ class IngredientServiceImpl(
         ingredientRepository.save(existing)
 
         if (request.allergens != null) {
-            // PUT semantics: full replacement of allergens
             ingredientAllergenRepository.deleteByIngredientId(id)
 
-            // Flush DELETE to DB and clear stale entities from JPA cache.
-            // Without this, saveAll() calls merge() on stale cached IngredientAllergen
-            // (same composite key) instead of persist(), silently losing data.
+            // Flush DELETE to DB and clear stale entities from JPA cache
             entityManager.flush()
             entityManager.clear()
 
             if (request.allergens.isNotEmpty()) {
-                // Re-fetch ingredient after clear (detached by entityManager.clear())
                 val freshIngredient = ingredientRepository.findById(id)
                     .orElseThrow { ResourceNotFoundException(message = "Ingredient with id $id not found") }
-                saveAllergens(freshIngredient, request.allergens)
+                saveAllergensBatch(freshIngredient, request.allergens)
             }
         }
 
-        entityManager.flush()
-        entityManager.clear()
-        return ingredientRepository.findByIdWithAllergens(id).get().toResponse()
+        return flushClearAndLoad(id)
     }
 
     @Transactional
@@ -132,10 +124,9 @@ class IngredientServiceImpl(
     @Transactional
     override fun setAllergens(id: UUID, allergens: List<IngredientAllergenRequest>): IngredientResponse {
         log.info("Setting {} allergens for ingredient {}", allergens.size, id)
-        val ingredient = ingredientRepository.findById(id)
+        ingredientRepository.findById(id)
             .orElseThrow { ResourceNotFoundException(message = "Ingredient with id $id not found") }
 
-        // PUT semantics: full replacement
         ingredientAllergenRepository.deleteByIngredientId(id)
 
         // Flush DELETE to DB and clear stale entities from JPA cache
@@ -143,30 +134,45 @@ class IngredientServiceImpl(
         entityManager.clear()
 
         if (allergens.isNotEmpty()) {
-            // Re-fetch ingredient after clear (detached by entityManager.clear())
             val freshIngredient = ingredientRepository.findById(id)
                 .orElseThrow { ResourceNotFoundException(message = "Ingredient with id $id not found") }
-            saveAllergens(freshIngredient, allergens)
+            saveAllergensBatch(freshIngredient, allergens)
             freshIngredient.updatedAt = OffsetDateTime.now()
             ingredientRepository.save(freshIngredient)
         }
 
+        return flushClearAndLoad(id)
+    }
+
+    private fun flushClearAndLoad(id: UUID): IngredientResponse {
         entityManager.flush()
         entityManager.clear()
         return ingredientRepository.findByIdWithAllergens(id).get().toResponse()
     }
 
-    private fun saveAllergens(ingredient: Ingredient, allergens: List<IngredientAllergenRequest>) {
+    private fun saveAllergensBatch(ingredient: Ingredient, allergens: List<IngredientAllergenRequest>) {
+        // Batch fetch all allergen codes in one query
+        val codes = allergens.map { it.allergenCode }
+        val allergenEntities = allergenRepository.findAllByCodeIn(codes)
+        val allergenMap = allergenEntities.associateBy { it.code }
+
+        val missing = codes.filter { it !in allergenMap }
+        if (missing.isNotEmpty()) {
+            throw ResourceNotFoundException(message = "Allergens not found: $missing")
+        }
+
         val newAllergens = allergens.map { request ->
-            val allergen = allergenRepository.findByCode(request.allergenCode)
-                ?: throw ResourceNotFoundException(message = "Allergen with code '${request.allergenCode}' not found")
             val level = runCatching { ContainmentLevel.valueOf(request.containmentLevel) }
                 .getOrElse {
                     throw ResourceNotFoundException(
-                        message = "Invalid containment level '${request.containmentLevel}'. Valid values: ${ContainmentLevel.values().joinToString()}"
+                        message = "Invalid containment level '${request.containmentLevel}'. Valid values: ${ContainmentLevel.entries.joinToString()}"
                     )
                 }
-            IngredientAllergen(ingredient = ingredient, allergen = allergen, containmentLevel = level)
+            IngredientAllergen(
+                ingredient = ingredient,
+                allergen = allergenMap[request.allergenCode]!!,
+                containmentLevel = level
+            )
         }
         ingredientAllergenRepository.saveAll(newAllergens)
     }
