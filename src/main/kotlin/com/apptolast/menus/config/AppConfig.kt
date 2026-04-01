@@ -26,6 +26,6 @@ data class AppConfig(
     data class UploadProperties(
         val dir: String = "/data/uploads",
         val maxSizeMb: Long = 5,
-        val allowedTypes: List<String> = listOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")
+        val allowedTypes: List<String> = listOf("image/png", "image/jpeg", "image/webp", "image/svg+xml", "application/json")
     )
 }
