@@ -19,15 +19,13 @@ class AdminWhitelistController(
     @GetMapping
     @Operation(summary = "List all whitelisted admin emails")
     fun getAll(): List<WhitelistResponse> =
-        adminWhitelistService.findAll().map { WhitelistResponse(it.id, it.email) }
+        adminWhitelistService.findAll()
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Add an email to the admin whitelist")
-    fun addEmail(@Valid @RequestBody request: WhitelistRequest): WhitelistResponse {
-        val saved = adminWhitelistService.addEmail(request.email)
-        return WhitelistResponse(saved.id, saved.email)
-    }
+    fun addEmail(@Valid @RequestBody request: WhitelistRequest): WhitelistResponse =
+        adminWhitelistService.addEmail(request.email)
 
     @DeleteMapping("/{email}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

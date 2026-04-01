@@ -1,10 +1,10 @@
 package com.apptolast.menus.consumer.service.impl
 
+import com.apptolast.menus.consumer.dto.response.FavoriteRestaurantResponse
 import com.apptolast.menus.consumer.model.entity.UserFavoriteRestaurant
 import com.apptolast.menus.consumer.repository.UserAccountRepository
 import com.apptolast.menus.consumer.repository.UserFavoriteRestaurantRepository
 import com.apptolast.menus.consumer.service.FavoriteRestaurantService
-import com.apptolast.menus.restaurant.dto.response.RestaurantResponse
 import com.apptolast.menus.restaurant.repository.RestaurantRepository
 import com.apptolast.menus.shared.exception.ConflictException
 import com.apptolast.menus.shared.exception.ResourceNotFoundException
@@ -23,10 +23,10 @@ class FavoriteRestaurantServiceImpl(
 
     private val log = LoggerFactory.getLogger(FavoriteRestaurantServiceImpl::class.java)
 
-    override fun getFavorites(userId: UUID): List<RestaurantResponse> {
+    override fun getFavorites(userId: UUID): List<FavoriteRestaurantResponse> {
         log.info("Getting favorite restaurants for user {}", userId)
         return userFavoriteRestaurantRepository.findByUserIdWithRestaurant(userId)
-            .map { it.restaurant.toResponse() }
+            .map { it.toResponse() }
     }
 
     @Transactional
@@ -34,7 +34,7 @@ class FavoriteRestaurantServiceImpl(
         log.info("Adding restaurant {} to favorites for user {}", restaurantId, userId)
 
         if (userFavoriteRestaurantRepository.existsByUserIdAndRestaurantId(userId, restaurantId)) {
-            throw ConflictException("FAVORITE_ALREADY_EXISTS", "Restaurant is already in favorites")
+            throw ConflictException("ALREADY_FAVORITE", "Restaurant is already in favorites")
         }
 
         val user = userAccountRepository.findById(userId)
@@ -43,36 +43,22 @@ class FavoriteRestaurantServiceImpl(
             .orElseThrow { ResourceNotFoundException("RESTAURANT_NOT_FOUND", "Restaurant not found") }
 
         userFavoriteRestaurantRepository.save(
-            UserFavoriteRestaurant(
-                user = user,
-                restaurant = restaurant
-            )
+            UserFavoriteRestaurant(user = user, restaurant = restaurant)
         )
     }
 
     @Transactional
     override fun removeFavorite(userId: UUID, restaurantId: UUID) {
         log.info("Removing restaurant {} from favorites for user {}", restaurantId, userId)
-
-        if (!userFavoriteRestaurantRepository.existsByUserIdAndRestaurantId(userId, restaurantId)) {
-            throw ResourceNotFoundException("FAVORITE_NOT_FOUND", "Restaurant is not in favorites")
-        }
-
         userFavoriteRestaurantRepository.deleteByUserIdAndRestaurantId(userId, restaurantId)
     }
 
     override fun isFavorite(userId: UUID, restaurantId: UUID): Boolean =
         userFavoriteRestaurantRepository.existsByUserIdAndRestaurantId(userId, restaurantId)
 
-    private fun com.apptolast.menus.restaurant.model.entity.Restaurant.toResponse() = RestaurantResponse(
-        id = id,
-        name = name,
-        slug = slug,
-        description = description ?: "",
-        address = address ?: "",
-        phone = phone ?: "",
-        logoUrl = logoUrl,
-        active = active,
-        createdAt = createdAt
+    private fun UserFavoriteRestaurant.toResponse() = FavoriteRestaurantResponse(
+        restaurantId = restaurant.id,
+        restaurantName = restaurant.name,
+        restaurantSlug = restaurant.slug
     )
 }

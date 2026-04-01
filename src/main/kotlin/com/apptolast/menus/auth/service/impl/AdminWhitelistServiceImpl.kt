@@ -1,5 +1,6 @@
 package com.apptolast.menus.auth.service.impl
 
+import com.apptolast.menus.auth.dto.response.WhitelistResponse
 import com.apptolast.menus.auth.model.entity.AdminWhitelist
 import com.apptolast.menus.auth.repository.AdminWhitelistRepository
 import com.apptolast.menus.auth.service.AdminWhitelistService
@@ -14,15 +15,15 @@ class AdminWhitelistServiceImpl(
 ) : AdminWhitelistService {
 
     @Transactional(readOnly = true)
-    override fun findAll(): List<AdminWhitelist> =
-        adminWhitelistRepository.findAll()
+    override fun findAll(): List<WhitelistResponse> =
+        adminWhitelistRepository.findAll().map { it.toResponse() }
 
     @Transactional
-    override fun addEmail(email: String): AdminWhitelist {
+    override fun addEmail(email: String): WhitelistResponse {
         if (adminWhitelistRepository.existsByEmail(email)) {
             throw ConflictException("EMAIL_ALREADY_WHITELISTED", "Email is already in the admin whitelist")
         }
-        return adminWhitelistRepository.save(AdminWhitelist(email = email))
+        return adminWhitelistRepository.save(AdminWhitelist(email = email)).toResponse()
     }
 
     @Transactional
@@ -35,4 +36,6 @@ class AdminWhitelistServiceImpl(
     @Transactional(readOnly = true)
     override fun isWhitelisted(email: String): Boolean =
         adminWhitelistRepository.existsByEmail(email)
+
+    private fun AdminWhitelist.toResponse() = WhitelistResponse(id = id, email = email)
 }

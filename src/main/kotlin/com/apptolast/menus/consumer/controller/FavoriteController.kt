@@ -1,13 +1,7 @@
 package com.apptolast.menus.consumer.controller
 
 import com.apptolast.menus.consumer.dto.response.FavoriteRestaurantResponse
-import com.apptolast.menus.consumer.model.entity.UserAccount
-import com.apptolast.menus.consumer.model.entity.UserFavoriteRestaurant
-import com.apptolast.menus.consumer.repository.UserAccountRepository
-import com.apptolast.menus.consumer.repository.UserFavoriteRestaurantRepository
-import com.apptolast.menus.restaurant.repository.RestaurantRepository
-import com.apptolast.menus.shared.exception.ConflictException
-import com.apptolast.menus.shared.exception.ResourceNotFoundException
+import com.apptolast.menus.consumer.service.FavoriteRestaurantService
 import com.apptolast.menus.shared.security.UserPrincipal
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -17,7 +11,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
 
@@ -26,9 +19,7 @@ import java.util.UUID
 @Tag(name = "User Favorites", description = "Manage favorite restaurants")
 @SecurityRequirement(name = "Bearer Authentication")
 class FavoriteController(
-    private val userFavoriteRestaurantRepository: UserFavoriteRestaurantRepository,
-    private val userAccountRepository: UserAccountRepository,
-    private val restaurantRepository: RestaurantRepository
+    private val favoriteRestaurantService: FavoriteRestaurantService
 ) {
 
     @GetMapping
@@ -39,13 +30,10 @@ class FavoriteController(
     )
     fun listFavorites(
         @AuthenticationPrincipal principal: UserPrincipal
-    ): ResponseEntity<List<FavoriteRestaurantResponse>> {
-        val favorites = userFavoriteRestaurantRepository.findByUserIdWithRestaurant(principal.userId)
-        return ResponseEntity.ok(favorites.map { it.toResponse() })
-    }
+    ): ResponseEntity<List<FavoriteRestaurantResponse>> =
+        ResponseEntity.ok(favoriteRestaurantService.getFavorites(principal.userId))
 
     @PostMapping("/{restaurantId}")
-    @Transactional
     @Operation(summary = "Add restaurant to favorites")
     @ApiResponses(
         ApiResponse(responseCode = "201", description = "Restaurant added to favorites"),
@@ -57,19 +45,11 @@ class FavoriteController(
         @AuthenticationPrincipal principal: UserPrincipal,
         @PathVariable restaurantId: UUID
     ): ResponseEntity<Void> {
-        if (userFavoriteRestaurantRepository.existsByUserIdAndRestaurantId(principal.userId, restaurantId)) {
-            throw ConflictException("ALREADY_FAVORITE", "Restaurant is already in favorites")
-        }
-        val user = userAccountRepository.findById(principal.userId)
-            .orElseThrow { ResourceNotFoundException("USER_NOT_FOUND", "User not found") }
-        val restaurant = restaurantRepository.findById(restaurantId)
-            .orElseThrow { ResourceNotFoundException("RESTAURANT_NOT_FOUND", "Restaurant not found") }
-        userFavoriteRestaurantRepository.save(UserFavoriteRestaurant(user = user, restaurant = restaurant))
+        favoriteRestaurantService.addFavorite(principal.userId, restaurantId)
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
     @DeleteMapping("/{restaurantId}")
-    @Transactional
     @Operation(summary = "Remove restaurant from favorites")
     @ApiResponses(
         ApiResponse(responseCode = "204", description = "Restaurant removed from favorites"),
@@ -79,13 +59,7 @@ class FavoriteController(
         @AuthenticationPrincipal principal: UserPrincipal,
         @PathVariable restaurantId: UUID
     ): ResponseEntity<Void> {
-        userFavoriteRestaurantRepository.deleteByUserIdAndRestaurantId(principal.userId, restaurantId)
+        favoriteRestaurantService.removeFavorite(principal.userId, restaurantId)
         return ResponseEntity.noContent().build()
     }
-
-    private fun UserFavoriteRestaurant.toResponse() = FavoriteRestaurantResponse(
-        restaurantId = restaurant.id,
-        restaurantName = restaurant.name,
-        restaurantSlug = restaurant.slug
-    )
 }
